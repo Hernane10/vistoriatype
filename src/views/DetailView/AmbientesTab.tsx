@@ -9,6 +9,72 @@ import { PhotoPicker, PhotoThumb } from "../../components/media";
 import { FIELD_OPTIONS, ITEM_FIELD_DEFS, PROPERTY_MODELS, TEMPLATES, makeItem, relevantFieldKeys } from "../../data/inspectionModel";
 import { filesToPhotos } from "../../utils/media";
 // ... outros imports
+// ============================================
+// IMAGENS PADRÃO POR TIPO DE AMBIENTE
+// ============================================
+const IMAGENS_PADRAO: Record<string, string> = {
+  "sala de estar": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=150&auto=format&fit=crop",
+  "sala": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=150&auto=format&fit=crop",
+  "cozinha": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=150&auto=format&fit=crop",
+  "quarto": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=150&auto=format&fit=crop",
+  "dormitorio": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=150&auto=format&fit=crop",
+  "banheiro": "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=150&auto=format&fit=crop",
+  "lavabo": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=150&auto=format&fit=crop",
+  "area de serviço": "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=150&auto=format&fit=crop",
+  "lavanderia": "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=150&auto=format&fit=crop",
+  "corredor": "https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=150&auto=format&fit=crop",
+  "hall": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
+  "garagem": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=150&auto=format&fit=crop",
+  "area externa": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
+  "quintal": "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=150&auto=format&fit=crop",
+  "varanda": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
+  "segurança": "https://images.unsplash.com/photo-1558002038-1055907df827?w=150&auto=format&fit=crop",
+  "chaves": "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=150&auto=format&fit=crop",
+  "medidores": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=150&auto=format&fit=crop",
+  "instalações": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=150&auto=format&fit=crop",
+  "instalacoes": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=150&auto=format&fit=crop",
+  "piscina": "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?w=150&auto=format&fit=crop",
+  "escritorio": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=150&auto=format&fit=crop",
+  "sala de jantar": "https://images.unsplash.com/photo-1617806118233-18e1de247200?w=150&auto=format&fit=crop",
+  "closet": "https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=150&auto=format&fit=crop",
+  "despensa": "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=150&auto=format&fit=crop",
+  "terraço": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
+  "terraco": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
+  "sacada": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
+  "sotao": "https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=150&auto=format&fit=crop",
+  "porao": "https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=150&auto=format&fit=crop",
+  "jardim": "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=150&auto=format&fit=crop",
+  "telhado": "https://images.unsplash.com/photo-1632759145351-1d592919f522?w=150&auto=format&fit=crop",
+  "fachada": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=150&auto=format&fit=crop",
+  "deposito": "https://images.unsplash.com/photo-1553413077-190dd305871c?w=150&auto=format&fit=crop",
+  "estoque": "https://images.unsplash.com/photo-1553413077-190dd305871c?w=150&auto=format&fit=crop",
+  "banheiro social": "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=150&auto=format&fit=crop",
+  "banheiro suite": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=150&auto=format&fit=crop",
+};
+
+// ============================================
+// IMAGEM GENÉRICA (quando não encontra)
+// ============================================
+const IMAGEM_GENERICA = "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=150&auto=format&fit=crop";
+
+// ============================================
+// FUNÇÃO PARA PEGAR A IMAGEM PADRÃO
+// ============================================
+function getImagemPadrao(nomeAmbiente: string): string {
+  if (!nomeAmbiente) return IMAGEM_GENERICA;
+  const nome = nomeAmbiente.toLowerCase().trim();
+  
+  // Procura primeiro por correspondência exata
+  if (IMAGENS_PADRAO[nome]) return IMAGENS_PADRAO[nome];
+  
+  // Depois procura por correspondência parcial
+  for (const [chave, url] of Object.entries(IMAGENS_PADRAO)) {
+    if (nome.includes(chave) || chave.includes(nome)) return url;
+  }
+  
+  // Se não encontrar, retorna a genérica
+  return IMAGEM_GENERICA;
+}
 
 const ESTADOS = [
   "Novo",
@@ -84,28 +150,27 @@ export function AmbientesTab({ inspection, locked, templateOpen, setTemplateOpen
         </div>
       )}
 
-      {inspection.ambientes.length === 0 ? (
-        <div className="card p-10 text-center">
-          <MapPin size={30} className="mx-auto mb-2" style={{ color: "var(--ink-soft)" }} />
-          <p className="text-sm" style={{ color: "var(--ink-soft)" }}>
-            Nenhum ambiente adicionado. Use um modelo pronto ou crie um ambiente personalizado.
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {inspection.ambientes.map((amb, idx) => (
-            <AmbienteCard
-              key={amb.id}
-              ambiente={amb}
-              numero={idx + 1}
-              locked={locked}
-              onRemove={() => removeAmbiente(amb.id)}
-              onChange={(fn) => updateAmbiente(amb.id, fn)}
-            />
-          ))}
-        </div>
-      )}
-    </>
+{inspection.ambientes.length === 0 ? (
+  <div className="card p-10 text-center rounded-2xl" style={{ background: "#252836", border: "1px solid #323546" }}>
+    <MapPin size={30} className="mx-auto mb-2 text-gray-400" />
+    <p className="text-sm text-gray-400">
+      Nenhum ambiente adicionado. Use um modelo pronto ou crie um ambiente personalizado.
+    </p>
+  </div>
+) : (
+  <div className="flex flex-col gap-3">
+    {inspection.ambientes.map((amb, idx) => (
+      <AmbienteCard
+        key={amb.id}
+        ambiente={amb}
+        numero={idx + 1}
+        locked={locked}
+        onRemove={() => removeAmbiente(amb.id)}
+        onChange={(fn) => updateAmbiente(amb.id, fn)}
+      />
+    ))}
+  </div>
+)}    </>
   );
 }
 
@@ -113,7 +178,7 @@ export function AmbientesTab({ inspection, locked, templateOpen, setTemplateOpen
 export function AmbienteCard({ ambiente, numero, locked, onRemove, onChange }) {
   const [open, setOpen] = useState(false);
   const fotosAmbiente = ambiente.fotos || [];
-
+const fotoCapa = fotosAmbiente[0]?.src || getImagemPadrao(ambiente.nome);
   function addItem() {
     const nome = prompt("Nome do item:");
     if (!nome || !nome.trim()) return;
@@ -140,32 +205,59 @@ export function AmbienteCard({ ambiente, numero, locked, onRemove, onChange }) {
   const avariasAmb = ambiente.itens.filter((i) => i.temDano).length;
 
   return (
-    <div className="card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 cursor-pointer" style={{ background: "var(--card-alt)" }} onClick={() => setOpen((v) => !v)}>
-        {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        {numero && (
-          <span
-            className="mono font-bold flex items-center justify-center rounded-full shrink-0"
-            style={{ width: 22, height: 22, fontSize: 11, background: "var(--accent)", color: "#F3E4E7" }}
-          >
-            {String(numero).padStart(2, "0")}
+    <div 
+      className="rounded-2xl overflow-hidden transition-all duration-200"
+      style={{ background: "#252A34", border: "1px solid #2E3440" }}
+    >
+      <div 
+        className="flex items-center gap-3 p-3 cursor-pointer select-none"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-800">
+          <img 
+            src={fotoCapa} 
+            alt={ambiente.nome} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h3 className="text-white font-medium text-sm truncate">
+            Ambiente {numero} {ambiente.nome}
+          </h3>
+          <p className="text-gray-400 text-xs mt-0.5">
+            {ambiente.itens.length} {ambiente.itens.length === 1 ? "item" : "itens"}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          {avariasAmb > 0 && (
+            <span className="badge badge-bad px-2 py-0.5 text-xs rounded-full">
+              {avariasAmb} avaria(s)
+            </span>
+          )}
+
+          <span className="text-white font-semibold text-sm px-1">
+            {ambiente.itens.length}
           </span>
-        )}
-        <h3 className="display font-semibold text-sm flex-1">{ambiente.nome}</h3>
-        <span className="text-xs mono" style={{ color: "var(--ink-soft)" }}>{ambiente.itens.length} itens</span>
-        {fotosAmbiente.length > 0 && <span className="text-xs mono" style={{ color: "var(--ink-soft)" }}>{fotosAmbiente.length} mídia(s)</span>}
-        {avariasAmb > 0 && <span className="badge badge-bad">{avariasAmb} avarias</span>}
-        {!locked && (
-          <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="btn-ghost rounded-full p-1.5">
-            <Trash2 size={13} />
-          </button>
-        )}
+
+          {!locked && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onRemove(); }} 
+              className="p-1.5 text-gray-400 hover:text-red-400 rounded-full transition-colors"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
+
+          {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+        </div>
       </div>
 
       {open && (
-        <div className="p-4">
-          <div className="mb-4 p-3 rounded-2xl" style={{ border: "1px dashed var(--line)" }}>
-            <p className="label mb-2">Fotos e vídeos gerais do ambiente</p>
+        <div className="p-4 border-t border-[#2E3440]" style={{ background: "#1E222B" }}>
+          <div className="mb-4 p-3 rounded-xl border border-dashed border-gray-700">
+            <p className="label mb-2 text-xs text-gray-400">Fotos e vídeos gerais do ambiente</p>
             <div className="flex items-center gap-2 flex-wrap mb-2">
               {fotosAmbiente.map((foto, idx) => (
                 <PhotoThumb
@@ -185,7 +277,7 @@ export function AmbienteCard({ ambiente, numero, locked, onRemove, onChange }) {
             ))}
           </div>
           {!locked && (
-            <button onClick={addItem} className="btn-ghost rounded-full px-3 py-2 text-xs mt-3 flex items-center gap-1.5">
+            <button onClick={addItem} className="btn-ghost rounded-full px-3 py-2 text-xs mt-3 flex items-center gap-1.5 text-gray-300">
               <Plus size={13} /> Adicionar item
             </button>
           )}
@@ -194,7 +286,6 @@ export function AmbienteCard({ ambiente, numero, locked, onRemove, onChange }) {
     </div>
   );
 }
-
 // A technical field shown minimized (label + current value in one row) with a
 // button/chevron that opens a picker of pre-filled options (or a custom text
 // input if nothing listed fits) — instead of an always-open input.
