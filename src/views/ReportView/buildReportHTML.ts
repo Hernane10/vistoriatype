@@ -40,11 +40,18 @@ export function buildReportHTML(inspection, logo) {
     ...inspection.chaves.outras.map((o) => ({ label: o.nome, ...o })),
   ].filter((c) => c.quantidade || c.observacoes || (c.fotos || []).length);
 
-  const estadoColors = {
-    "Novo": ["#e5f6ec", "#2e8f57"], "Bom": ["#e5f6ec", "#2e8f57"],
-    "Regular": ["#fdf1dc", "#a97a1f"], "Ruim": ["#fbe4e1", "#b23e2a"],
-    "Péssimo": ["#f5d9dd", "#8e2e3d"], "Sem teste": ["#eef0f2", "#6b7280"],
-  };
+function getEstadoBadgeStyle(estado: string, semTeste?: boolean) {
+  if (semTeste) return "background-color: #ffffff; color: #4b5563; border: 1px solid #d1d5db; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+  switch (estado) {
+    case "Novo": return "background-color: #000000; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+    case "Ótimo": return "background-color: #16a34a; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+    case "Bom": return "background-color: #2563eb; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+    case "Regular": return "background-color: #eab308; color: #000000; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+    case "Ruim": return "background-color: #dc2626; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+    case "Péssimo": return "background-color: #7f1d1d; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+    default: return "background-color: #ffffff; color: #4b5563; border: 1px solid #d1d5db; padding: 2px 8px; border-radius: 12px; font-size: 12px;";
+  }
+}
 
   const ambientesHtml = inspection.ambientes.map((amb, ambIdx) => {
     const fotosAmbienteHtml = (amb.fotos || []).length
@@ -52,7 +59,7 @@ export function buildReportHTML(inspection, logo) {
     const itensHtml = amb.itens.map((item) => {
       const camposPreenchidos = ITEM_FIELD_DEFS.filter((f) => (item.campos || {})[f.key]);
       const estadoLabel = item.semTeste ? "Sem teste" : item.estado;
-      const [bg, fg] = estadoColors[estadoLabel] || estadoColors["Sem teste"];
+const badgeStyle = getEstadoBadgeStyle(item.estado, item.semTeste);
       const camposLine = camposPreenchidos.length
         ? `<p class="meta-line">${camposPreenchidos.map((f) => `<strong>${f.label}:</strong> ${escapeHtml(item.campos[f.key])}`).join(" &nbsp;·&nbsp; ")}</p>` : "";
       const obsLine = item.observacoes ? `<p class="obs-line">${escapeHtml(item.observacoes)}</p>` : "";
@@ -62,7 +69,7 @@ export function buildReportHTML(inspection, logo) {
         <div class="item-card">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
             <strong style="font-size:14px">${escapeHtml(item.nome)}</strong>
-            <span class="pill" style="background:${bg};color:${fg}">${escapeHtml(estadoLabel)}</span>
+          <span class="pill" style="${badgeStyle}">${escapeHtml(estadoLabel)}</span>
             ${item.temDano ? `<span class="pill" style="background:#fbe4e1;color:#b23e2a">Avaria</span>` : ""}
           </div>
           ${camposLine}${obsLine}${danoLine}${fotosHtml}

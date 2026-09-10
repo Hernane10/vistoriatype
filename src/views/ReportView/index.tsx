@@ -248,14 +248,23 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
                     <div key={item.id} className="text-sm">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{item.nome}</span>
-                        {item.semTeste ? (
-                          <span className="badge badge-neutral">Sem teste</span>
-                        ) : (
-                          <span className={`badge ${item.estado === "Bom" || item.estado === "Novo" ? "badge-good" : item.estado === "Regular" ? "badge-warn" : item.estado === "Péssimo" ? "badge-worse" : "badge-bad"}`}>
-                            {item.estado}
-                          </span>
-                        )}
-                        {item.temDano && <span className="badge badge-bad flex items-center gap-1"><AlertTriangle size={10} /> Avaria</span>}
+                         <span className={`px-3 py-1 text-xs rounded-full font-semibold inline-block ${
+  item.semTeste ? "bg-gray-200 text-gray-700 border border-gray-300" :
+  item.estado === "Novo" ? "bg-black text-white" :
+  item.estado === "Ótimo" ? "bg-green-600 text-white" :
+  item.estado === "Bom" ? "bg-blue-600 text-white" :
+  item.estado === "Regular" ? "bg-yellow-500 text-black" :
+  item.estado === "Ruim" ? "bg-red-600 text-white" :
+  item.estado === "Péssimo" ? "bg-red-900 text-white" :
+  "bg-gray-400 text-white"
+}`}>
+  {item.semTeste ? "Sem teste" : item.estado}
+</span>
+{item.temDano && (
+  <span className="px-3 py-1 text-xs rounded-full font-semibold inline-flex items-center gap-1 bg-red-600 text-white">
+    <AlertTriangle size={10} /> Avaria
+  </span>
+)}
                       </div>
                       {camposPreenchidos.length > 0 && (
                         <p className="mt-1 text-xs" style={{ color: "var(--ink-soft)" }}>
@@ -367,4 +376,3 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
     </div>
   );
 }
-

@@ -1,5 +1,5 @@
-// Auto-extracted from the original single-file App.jsx — logic is unchanged,
-// only the file boundaries moved, so behavior should be identical.
+// src/components/CalendarWidget.tsx
+// CORRIGIDO - Sem agendamento fantasma
 
 import { useState } from "react";
 import { Calendar, ChevronRight, EyeOff, X } from "lucide-react";
@@ -17,23 +17,36 @@ interface CalendarWidgetProps {
   onStartFromAgendamento: (agendamento: Agendamento) => void;
 }
 
-export function CalendarWidget({ inspections, dateFilter, setDateFilter, onHide, agendamentos, onAddAgendamento, onRemoveAgendamento, onStartFromAgendamento }: CalendarWidgetProps) {
+export function CalendarWidget({ 
+  inspections, 
+  dateFilter, 
+  setDateFilter, 
+  onHide, 
+  agendamentos, 
+  onAddAgendamento, 
+  onRemoveAgendamento, 
+  onStartFromAgendamento 
+}: CalendarWidgetProps) {
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     return { year: d.getFullYear(), month: d.getMonth() };
   });
   const [schedulingDate, setSchedulingDate] = useState<string | null>(null);
 
+  // Contagem de vistorias por data
   const countsByDate: Record<string, number> = {};
   inspections.forEach((i) => {
     if (!i.dataVistoria) return;
     countsByDate[i.dataVistoria] = (countsByDate[i.dataVistoria] || 0) + 1;
   });
 
+  // ✅ CORRIGIDO: Filtra agendamentos com data inválida
   const agendaByDate: Record<string, Agendamento[]> = {};
-  (agendamentos || []).forEach((a) => {
-    (agendaByDate[a.date] = agendaByDate[a.date] || []).push(a);
-  });
+  (agendamentos || [])
+    .filter((a) => a.date && a.date.match(/^\d{4}-\d{2}-\d{2}$/)) // Só datas válidas
+    .forEach((a) => {
+      (agendaByDate[a.date] = agendaByDate[a.date] || []).push(a);
+    });
 
   const firstOfMonth = new Date(cursor.year, cursor.month, 1);
   const startWeekday = firstOfMonth.getDay();
@@ -58,10 +71,6 @@ export function CalendarWidget({ inspections, dateFilter, setDateFilter, onHide,
     });
   }
 
-  // Clicking a day with nothing on it schedules a vistoria there (that's now
-  // the calendar's only "click a date" behavior worth showing a picker for).
-  // Clicking a day that already has vistorias or an agendamento toggles the
-  // list filter instead, since there's already something to look at.
   function handleDayClick(iso: string, hasContent: boolean, isSelected: boolean) {
     if (hasContent) {
       setDateFilter(isSelected ? null : iso);
@@ -70,8 +79,9 @@ export function CalendarWidget({ inspections, dateFilter, setDateFilter, onHide,
     }
   }
 
+  // ✅ CORRIGIDO: Filtra agendamentos futuros com data válida
   const proximos = (agendamentos || [])
-    .filter((a) => a.date >= todayIso)
+    .filter((a) => a.date && a.date >= todayIso && a.date.match(/^\d{4}-\d{2}-\d{2}$/))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   return (
@@ -155,7 +165,7 @@ export function CalendarWidget({ inspections, dateFilter, setDateFilter, onHide,
                 <Calendar size={13} style={{ color: "var(--warn)" }} className="shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold mono">{fmtDate(a.date)}</span>
+                    <span className="font-semibold mono">{a.date}</span>
                     <span className="font-medium truncate" style={{ color: "var(--ink-strong)" }}>{a.titulo}</span>
                   </p>
                   {a.observacao && (
@@ -179,7 +189,10 @@ export function CalendarWidget({ inspections, dateFilter, setDateFilter, onHide,
         <AgendarModal
           date={schedulingDate}
           onClose={() => setSchedulingDate(null)}
-          onSave={(data, titulo, observacao) => { onAddAgendamento(data, titulo, observacao); setSchedulingDate(null); }}
+          onSave={(data, titulo, observacao) => { 
+            onAddAgendamento(data, titulo, observacao); 
+            setSchedulingDate(null); 
+          }}
         />
       )}
     </div>
@@ -212,7 +225,23 @@ export function AgendarModal({ date, onClose, onSave }: AgendarModalProps) {
         <textarea className="textarea w-full px-4 py-2.5 text-sm mb-4" rows={2} placeholder="Detalhes do agendamento..." value={observacao} onChange={(e) => setObservacao(e.target.value)} />
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="btn-ghost rounded-full px-4 py-2 text-sm">Cancelar</button>
-          <button disabled={!titulo.trim() || !dataAgendamento} onClick={() => onSave(dataAgendamento, titulo.trim(), observacao.trim())} className="btn-primary rounded-full px-4 py-2 text-sm">Agendar</button>
+          <button 
+            disabled={!titulo.trim() || !dataAgendamento} 
+            onClick={() => {
+              if (!dataAgendamento || !titulo.trim()) return;
+              // ✅ Validação extra antes de salvar
+              const [ano, mes, dia] = dataAgendamento.split("-").map(Number);
+              const dataValida = new Date(ano, mes - 1, dia);
+              if (isNaN(dataValida.getTime())) {
+                alert("Data inválida. Por favor, selecione uma data válida.");
+                return;
+              }
+              onSave(dataAgendamento, titulo.trim(), observacao.trim());
+            }} 
+            className="btn-primary rounded-full px-4 py-2 text-sm"
+          >
+            Agendar
+          </button>
         </div>
       </div>
     </div>

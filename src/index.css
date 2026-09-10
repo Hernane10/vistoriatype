@@ -2,11 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  margin: 0;
+/* Seus estilos globais aqui */
+:root {
+  --accent: #3b82f6;
+  --ink-soft: #6b7280;
+  --ink-strong: #1f2937;
+  --card-alt: #f3f4f6;
+  --line: #e5e7eb;
+  --bad: #ef4444;
+  --good: #10b981;
 }
 
-body {
-  background: #14161f;
+.dark {
+  --accent: #60a5fa;
+  --ink-soft: #9ca3af;
+  --ink-strong: #f3f4f6;
+  --card-alt: #374151;
+  --line: #4b5563;
 }
+
+/* ============================================
+   CORES DOS ESTADOS DE CONSERVAÇÃO
+   ============================================ */
+.badge-black {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.badge-green {
+  background-color: #22c55e;
+  color: #ffffff;
+}
+
+.badge-blue {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.badge-warn {
+  background-color: #facc15;
+  color: #000000;
+}
+
+.badge-bad {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.badge-worse {
+  background-color: #8E2E3D;
+  color: #ffffff;
+}
+
+.badge-neutral {
+  background-color: #6B7280;
+  color: #ffffff;
+}
+
+/* ============================================ */
+/* CORES DOS BOTÕES DE ESTADO (AmbientesTab)     */
+/* ============================================ */
+.active-novo { background-color: #000000 !important; color: #ffffff !important; }
+.active-ótimo { background-color: #16a34a !important; color: #ffffff !important; }
+.active-bom { background-color: #2563eb !important; color: #ffffff !important; }
+.active-regular { background-color: #eab308 !important; color: #000000 !important; }
+.active-ruim { background-color: #dc2626 !important; color: #ffffff !important; }
+.active-péssimo { background-color: #7f1d1d !important; color: #ffffff !important; }
+.active-semteste { background-color: #ffffff !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; }
+
+/* ============================================ */
+/* CORES DOS BADGES (Laudo / PDF)               */
+/* ============================================ */
+.badge-novo { background-color: #000000; color: #ffffff; }
+.badge-ótimo { background-color: #16a34a; color: #ffffff; }
+.badge-bom { background-color: #2563eb; color: #ffffff; }
+.badge-regular { background-color: #eab308; color: #000000; }
+.badge-ruim { background-color: #dc2626; color: #ffffff; }
+.badge-péssimo { background-color: #7f1d1d; color: #ffffff; }
+.badge-semteste { background-color: #ffffff; color: #4b5563; border: 1px solid #d1d5db; }

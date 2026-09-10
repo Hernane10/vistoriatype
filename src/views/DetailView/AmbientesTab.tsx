@@ -8,6 +8,17 @@ import { TextAreaWithDictation } from "../../components/TextAreaWithDictation";
 import { PhotoPicker, PhotoThumb } from "../../components/media";
 import { FIELD_OPTIONS, ITEM_FIELD_DEFS, PROPERTY_MODELS, TEMPLATES, makeItem, relevantFieldKeys } from "../../data/inspectionModel";
 import { filesToPhotos } from "../../utils/media";
+// ... outros imports
+
+const ESTADOS = [
+  "Novo",
+  "Ótimo",
+  "Bom",
+  "Regular",
+  "Ruim",
+  "Péssimo",
+  "Sem teste"
+] as const;
 
 export function AmbientesTab({ inspection, locked, templateOpen, setTemplateOpen, addAmbiente, removeAmbiente, updateAmbiente, applyModel, customModels = [] }) {
   return (
@@ -210,135 +221,162 @@ export function ItemRow({ item, locked, onChange, onRemove }) {
     onChange((it) => ({ ...it, fotos: it.fotos.filter((_, i) => i !== idx) }));
   }
 
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--line)", background: "var(--card-alt)" }}>
-      <div className="flex items-center gap-2 px-4 py-3 cursor-pointer" onClick={() => setOpen((v) => !v)}>
-        {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-        <span className="font-semibold text-sm flex-1" style={{ color: "var(--item-name)" }}>{item.nome}</span>
-        <span className={`badge ${item.semTeste ? "badge-neutral" : estadoLabel === "Bom" || estadoLabel === "Novo" ? "badge-good" : estadoLabel === "Regular" ? "badge-warn" : estadoLabel === "Péssimo" ? "badge-worse" : "badge-bad"}`}>
-          {estadoLabel}
-        </span>
-        {item.temDano && <AlertTriangle size={14} style={{ color: "var(--bad)" }} />}
-        {item.fotos.length > 0 && <span className="text-xs mono" style={{ color: "var(--ink-soft)" }}>{item.fotos.length} mídia(s)</span>}
-        {!locked && (
-          <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="btn-ghost rounded-full p-1.5">
-            <Trash2 size={13} />
-          </button>
-        )}
-      </div>
+return (
+  <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--line)", background: "var(--card-alt)" }}>
+    <div className="flex items-center gap-2 px-4 py-3 cursor-pointer" onClick={() => setOpen((v) => !v)}>
+      {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+      <span className="font-semibold text-sm flex-1" style={{ color: "var(--item-name)" }}>{item.nome}</span>
+      
+      <span className={`badge px-2.5 py-1 text-xs rounded-full font-semibold ${
+  item.semTeste ? "bg-white text-gray-700 border border-gray-300" :
+  item.estado === "Novo" ? "bg-black text-white" :
+  item.estado === "Ótimo" ? "bg-green-600 text-white" :
+  item.estado === "Bom" ? "bg-blue-600 text-white" :
+  item.estado === "Regular" ? "bg-yellow-500 text-black" :
+  item.estado === "Ruim" ? "bg-red-600 text-white" :
+  item.estado === "Péssimo" ? "bg-red-900 text-white" :
+  "bg-gray-400 text-white"
+}`}>
+  {estadoLabel}
+</span>
 
-      {!open && camposPreenchidos > 0 && (
-        <p className="text-xs px-4 pb-3 pt-2" style={{ color: "var(--ink-soft)", borderTop: "1px solid var(--line)" }}>
-          {ITEM_FIELD_DEFS.filter((f) => campos[f.key]).map((f) => `${f.label}: ${campos[f.key]}`).join(" · ")}
-        </p>
+      {item.temDano && <AlertTriangle size={14} style={{ color: "var(--bad)" }} />}
+      {item.fotos.length > 0 && <span className="text-xs mono" style={{ color: "var(--ink-soft)" }}>{item.fotos.length} mídia(s)</span>}
+      {!locked && (
+        <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="btn-ghost rounded-full p-1.5">
+          <Trash2 size={13} />
+        </button>
       )}
+    </div>
 
-      {open && (
-        <div className="px-4 pb-4">
-          <div className="flex gap-2 flex-wrap mb-2">
-            {ESTADOS.map((e) => (
+    {!open && camposPreenchidos > 0 && (
+      <p className="text-xs px-4 pb-3 pt-2" style={{ color: "var(--ink-soft)", borderTop: "1px solid var(--line)" }}>
+        {ITEM_FIELD_DEFS.filter((f) => campos[f.key]).map((f) => `${f.label}: ${campos[f.key]}`).join(" · ")}
+      </p>
+    )}
+
+    {open && (
+      <div className="px-4 pb-4">
+        {/* ===== BOTÕES DE ESTADO ===== */}
+        <div className="flex gap-2 flex-wrap mb-2">
+          {ESTADOS.map((e) => {
+            const isSelected = e === "Sem teste" ? item.semTeste : (!item.semTeste && item.estado === e);
+            let corClasse = "bg-white/10 text-white/70 hover:bg-white/20 border-transparent";
+
+            if (isSelected) {
+              switch (e) {
+                case "Novo": corClasse = "bg-black text-white border-black"; break;
+                case "Ótimo": corClasse = "bg-green-600 text-white border-green-600"; break;
+                case "Bom": corClasse = "bg-blue-600 text-white border-blue-600"; break;
+                case "Regular": corClasse = "bg-yellow-500 text-black border-yellow-500"; break;
+                case "Ruim": corClasse = "bg-red-600 text-white border-red-600"; break;
+                case "Péssimo": corClasse = "bg-red-900 text-white border-red-900"; break;
+                case "Sem teste": corClasse = "bg-white text-gray-700 border-gray-300"; break;
+              }
+            }
+
+            return (
               <button
                 key={e}
                 disabled={locked}
-                onClick={() => onChange((it) => ({ ...it, estado: e, semTeste: false }))}
-                className={`estado-btn px-4 py-2 ${!item.semTeste && item.estado === e ? `active-${e}` : ""}`}
+                onClick={() => {
+                  if (e === "Sem teste") {
+                    onChange((it) => ({ ...it, semTeste: true, estado: null }));
+                  } else {
+                    onChange((it) => ({ ...it, estado: e, semTeste: false }));
+                  }
+                }}
+                className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap shrink-0 transition-all border ${corClasse}`}
               >
                 {e}
               </button>
-            ))}
-          </div>
-          <div className="flex gap-2 flex-wrap mb-3">
-            <button
-              disabled={locked}
-              onClick={() => onChange((it) => ({ ...it, semTeste: !it.semTeste }))}
-              className={`estado-btn px-4 py-2 ${item.semTeste ? "active-semteste" : ""}`}
-            >
-              Sem teste
-            </button>
-          </div>
-
-          <div className="grid gap-2 mb-2">
-            {visibleFields.map((f) =>
-              f.type === "number" ? (
-                <QuantityStepper
-                  key={f.key}
-                  label={f.label}
-                  value={campos[f.key]}
-                  disabled={locked}
-                  onChange={(val) => onChange((it) => ({ ...it, campos: { ...(it.campos || {}), [f.key]: val } }))}
-                />
-              ) : (
-                <TechFieldPicker
-                  key={f.key}
-                  fieldKey={f.key}
-                  label={f.label}
-                  value={campos[f.key]}
-                  options={FIELD_OPTIONS[f.key]}
-                  disabled={locked}
-                  onChange={(val) => onChange((it) => ({ ...it, campos: { ...(it.campos || {}), [f.key]: val } }))}
-                />
-              )
-            )}
-          </div>
-          {!locked && hiddenCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowAllFields((v) => !v)}
-              className="btn-ghost rounded-full px-3 py-1.5 text-xs mb-3 flex items-center gap-1.5"
-            >
-              {showAllFields ? <><ChevronDown size={12} className="rotate-180" /> Mostrar só os campos relevantes</> : <><Plus size={12} /> Mostrar mais {hiddenCount} campo(s)</>}
-            </button>
-          )}
-
-          <TextAreaWithDictation
-            disabled={locked}
-            className="px-4 py-2.5"
-            rows={2}
-            placeholder="Observação..."
-            value={item.observacoes}
-            onChange={(val) => onChange((it) => ({ ...it, observacoes: val }))}
-          />
-
-          <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer select-none">
-            <input
-              type="checkbox"
-              disabled={locked}
-              checked={item.temDano}
-              onChange={(e) => onChange((it) => ({ ...it, temDano: e.target.checked }))}
-            />
-            <span className="flex items-center gap-1" style={{ color: item.temDano ? "var(--bad)" : "var(--ink-soft)" }}>
-              <AlertTriangle size={13} /> Registrar avaria
-            </span>
-          </label>
-
-          {item.temDano && (
-            <div className="mt-2">
-              <TextAreaWithDictation
-                disabled={locked}
-                className="px-4 py-2.5"
-                rows={2}
-                placeholder="Descreva a avaria encontrada..."
-                style={{ borderColor: "var(--bad)" }}
-                value={item.descricaoDano}
-                onChange={(val) => onChange((it) => ({ ...it, descricaoDano: val }))}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
-            {item.fotos.map((foto, idx) => (
-              <PhotoThumb
-                key={idx}
-                foto={foto}
-                onRemove={!locked ? () => removePhoto(idx) : null}
-                onUpdate={!locked ? (marcas) => onChange((it) => ({ ...it, fotos: it.fotos.map((f, i) => (i === idx ? { ...f, marcas } : f)) })) : null}
-              />
-            ))}
-          </div>
-          {!locked && <div className="mt-2"><PhotoPicker onAdd={handleAddPhotos} small /></div>}
+            );
+          })}
         </div>
-      )}
-    </div>
-  );
-}
 
+        {/* ===== CAMPOS ===== */}
+        <div className="grid gap-2 mb-2">
+          {visibleFields.map((f) =>
+            f.type === "number" ? (
+              <QuantityStepper
+                key={f.key}
+                label={f.label}
+                value={campos[f.key]}
+                disabled={locked}
+                onChange={(val) => onChange((it) => ({ ...it, campos: { ...(it.campos || {}), [f.key]: val } }))}
+              />
+            ) : (
+              <TechFieldPicker
+                key={f.key}
+                fieldKey={f.key}
+                label={f.label}
+                value={campos[f.key]}
+                options={FIELD_OPTIONS[f.key]}
+                disabled={locked}
+                onChange={(val) => onChange((it) => ({ ...it, campos: { ...(it.campos || {}), [f.key]: val } }))}
+              />
+            )
+          )}
+        </div>
+
+        {!locked && hiddenCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAllFields((v) => !v)}
+            className="btn-ghost rounded-full px-3 py-1.5 text-xs mb-3 flex items-center gap-1.5"
+          >
+            {showAllFields ? <><ChevronDown size={12} className="rotate-180" /> Mostrar só os campos relevantes</> : <><Plus size={12} /> Mostrar mais {hiddenCount} campo(s)</>}
+          </button>
+        )}
+
+        <TextAreaWithDictation
+          disabled={locked}
+          className="px-4 py-2.5"
+          rows={2}
+          placeholder="Observação..."
+          value={item.observacoes}
+          onChange={(val) => onChange((it) => ({ ...it, observacoes: val }))}
+        />
+
+        <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            disabled={locked}
+            checked={item.temDano}
+            onChange={(e) => onChange((it) => ({ ...it, temDano: e.target.checked }))}
+          />
+          <span className="flex items-center gap-1" style={{ color: item.temDano ? "var(--bad)" : "var(--ink-soft)" }}>
+            <AlertTriangle size={13} /> Registrar avaria
+          </span>
+        </label>
+
+        {item.temDano && (
+          <div className="mt-2">
+            <TextAreaWithDictation
+              disabled={locked}
+              className="px-4 py-2.5"
+              rows={2}
+              placeholder="Descreva a avaria encontrada..."
+              style={{ borderColor: "var(--bad)" }}
+              value={item.descricaoDano}
+              onChange={(val) => onChange((it) => ({ ...it, descricaoDano: val }))}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {item.fotos.map((foto, idx) => (
+            <PhotoThumb
+              key={idx}
+              foto={foto}
+              onRemove={!locked ? () => removePhoto(idx) : null}
+              onUpdate={!locked ? (marcas) => onChange((it) => ({ ...it, fotos: it.fotos.map((f, i) => (i === idx ? { ...f, marcas } : f)) })) : null}
+            />
+          ))}
+        </div>
+        {!locked && <div className="mt-2"><PhotoPicker onAdd={handleAddPhotos} small /></div>}
+      </div>
+    )}
+  </div>
+);
+}

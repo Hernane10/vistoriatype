@@ -14,6 +14,8 @@ import { ListView } from "./views/ListView";
 import { ModelBuilderView } from "./views/ModelosTab";
 import { NewInspectionView } from "./views/NewInspectionView";
 import type { Agendamento, CustomModel, Inspection } from "./types/inspection";
+import { TesteCalendario } from "./TesteCalendario";
+
 
 type ViewName = "list" | "new" | "buildModel" | "detail";
 type Theme = "dark" | "light";
@@ -30,7 +32,6 @@ export default function App() {
   const [pendingModel, setPendingModel] = useState<string | CustomModel | null>(null);
   const [pendingPrefill, setPendingPrefill] = useState<{ date?: string; endereco?: string } | null>(null);
   const [customModels, setCustomModels] = useState<CustomModel[]>([]);
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -524,12 +525,11 @@ export default function App() {
           onDeleteCustomModel={deleteCustomModel}
           theme={theme}
           toggleTheme={toggleTheme}
-          agendamentos={agendamentos}
-          onAddAgendamento={addAgendamento}
-          onRemoveAgendamento={removeAgendamento}
           onStartFromAgendamento={startNewFromAgendamento}
           onExport={exportInspections}
           onImport={importInspections}
+          onUpdateInspections={setInspections}
+        
         />
         </div>
       )}
