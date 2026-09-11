@@ -10,69 +10,120 @@ import { FIELD_OPTIONS, ITEM_FIELD_DEFS, PROPERTY_MODELS, TEMPLATES, makeItem, r
 import { filesToPhotos } from "../../utils/media";
 // ... outros imports
 // ============================================
-// IMAGENS PADRÃO POR TIPO DE AMBIENTE
+// IMPORTS DAS IMAGENS DOS AMBIENTES
+// ============================================
+import imgAreaServico from "../../assets/ambientes/areadeservico.jpg";
+import imgAreaExterna from "../../assets/ambientes/areaexterna.jpg";
+import imgBanheiro from "../../assets/ambientes/banheiro.jpg";
+import imgChaves from "../../assets/ambientes/chaves.jpg";
+import imgCorredor from "../../assets/ambientes/corredor.jpg";
+import imgCozinha from "../../assets/ambientes/cozinha.jpg";
+import imgGaragem from "../../assets/ambientes/garagem.jpg";
+import imgHall from "../../assets/ambientes/hall.jpg";
+import imgInstalacoes from "../../assets/ambientes/instalacoes.jpg";
+import imgMedidores from "../../assets/ambientes/medidores.jpg";
+import imgQuarto from "../../assets/ambientes/quarto.jpg";
+import imgQuintal from "../../assets/ambientes/quintal.jpg";
+import imgSalaDeEstar from "../../assets/ambientes/saladeestar.jpg";
+import imgSeguranca from "../../assets/ambientes/seguranca.jpg";
+
+// ============================================
+// MAPEAMENTO DE IMAGENS POR TIPO DE AMBIENTE
 // ============================================
 const IMAGENS_PADRAO: Record<string, string> = {
-  "sala de estar": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=150&auto=format&fit=crop",
-  "sala": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=150&auto=format&fit=crop",
-  "cozinha": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=150&auto=format&fit=crop",
-  "quarto": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=150&auto=format&fit=crop",
-  "dormitorio": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=150&auto=format&fit=crop",
-  "banheiro": "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=150&auto=format&fit=crop",
-  "lavabo": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=150&auto=format&fit=crop",
-  "area de serviço": "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=150&auto=format&fit=crop",
-  "lavanderia": "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=150&auto=format&fit=crop",
-  "corredor": "https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=150&auto=format&fit=crop",
-  "hall": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
-  "garagem": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=150&auto=format&fit=crop",
-  "area externa": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
-  "quintal": "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=150&auto=format&fit=crop",
-  "varanda": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
-  "segurança": "https://images.unsplash.com/photo-1558002038-1055907df827?w=150&auto=format&fit=crop",
-  "chaves": "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=150&auto=format&fit=crop",
-  "medidores": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=150&auto=format&fit=crop",
-  "instalações": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=150&auto=format&fit=crop",
-  "instalacoes": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=150&auto=format&fit=crop",
-  "piscina": "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?w=150&auto=format&fit=crop",
-  "escritorio": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=150&auto=format&fit=crop",
-  "sala de jantar": "https://images.unsplash.com/photo-1617806118233-18e1de247200?w=150&auto=format&fit=crop",
-  "closet": "https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=150&auto=format&fit=crop",
-  "despensa": "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=150&auto=format&fit=crop",
-  "terraço": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
-  "terraco": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
-  "sacada": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=150&auto=format&fit=crop",
-  "sotao": "https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=150&auto=format&fit=crop",
-  "porao": "https://images.unsplash.com/photo-1560448204-61dc36dc98c8?w=150&auto=format&fit=crop",
-  "jardim": "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=150&auto=format&fit=crop",
-  "telhado": "https://images.unsplash.com/photo-1632759145351-1d592919f522?w=150&auto=format&fit=crop",
-  "fachada": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=150&auto=format&fit=crop",
-  "deposito": "https://images.unsplash.com/photo-1553413077-190dd305871c?w=150&auto=format&fit=crop",
-  "estoque": "https://images.unsplash.com/photo-1553413077-190dd305871c?w=150&auto=format&fit=crop",
-  "banheiro social": "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=150&auto=format&fit=crop",
-  "banheiro suite": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=150&auto=format&fit=crop",
+  "area de servico": imgAreaServico,
+  "areadeservico": imgAreaServico,
+  "area externa": imgAreaExterna,
+  "areaexterna": imgAreaExterna,
+  "banheiro": imgBanheiro,
+  "chaves": imgChaves,
+  "corredor": imgCorredor,
+  "cozinha": imgCozinha,
+  "garagem": imgGaragem,
+  "hall": imgHall,
+  "instalacoes": imgInstalacoes,
+  "medidores": imgMedidores,
+  "quarto": imgQuarto,
+  "quintal": imgQuintal,
+  "sala de estar": imgSalaDeEstar,
+  "saladeestar": imgSalaDeEstar,
+  "sala": imgSalaDeEstar,
+  "seguranca": imgSeguranca,
 };
 
 // ============================================
 // IMAGEM GENÉRICA (quando não encontra)
 // ============================================
-const IMAGEM_GENERICA = "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=150&auto=format&fit=crop";
-
+const IMAGEM_GENERICA = imgSalaDeEstar;
+ 
 // ============================================
-// FUNÇÃO PARA PEGAR A IMAGEM PADRÃO
+// FUNÇÃO PARA PEGAR A IMAGEM PADRÃO (MAIS PRECISA)
 // ============================================
 function getImagemPadrao(nomeAmbiente: string): string {
   if (!nomeAmbiente) return IMAGEM_GENERICA;
-  const nome = nomeAmbiente.toLowerCase().trim();
   
-  // Procura primeiro por correspondência exata
-  if (IMAGENS_PADRAO[nome]) return IMAGENS_PADRAO[nome];
-  
-  // Depois procura por correspondência parcial
-  for (const [chave, url] of Object.entries(IMAGENS_PADRAO)) {
-    if (nome.includes(chave) || chave.includes(nome)) return url;
+  // Normaliza: minúsculo, sem acentos, sem espaços extras
+  const nome = nomeAmbiente
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/\s+/g, " ");            // normaliza espaços
+
+  // ===== CORRESPONDÊNCIA EXATA (prioridade máxima) =====
+  const mapaExato: Record<string, string> = {
+    "sala de estar": imgSalaDeEstar,
+    "sala": imgSalaDeEstar,
+    "saladeestar": imgSalaDeEstar,
+    "cozinha": imgCozinha,
+    "quarto": imgQuarto,
+    "banheiro": imgBanheiro,
+    "lavabo": imgBanheiro,        // lavabo usa imagem de banheiro
+    "area de servico": imgAreaServico,
+    "areadeservico": imgAreaServico,
+    "corredor": imgCorredor,
+    "hall": imgHall,
+    "corredor/hall": imgCorredor,
+    "garagem": imgGaragem,
+    "area externa": imgAreaExterna,
+    "areaexterna": imgAreaExterna,
+    "quintal": imgQuintal,
+    "seguranca": imgSeguranca,
+    "chaves": imgChaves,
+    "medidores": imgMedidores,
+    "instalacoes": imgInstalacoes,
+  };
+
+  // ===== 1. TENTA CORRESPONDÊNCIA EXATA =====
+  if (mapaExato[nome]) return mapaExato[nome];
+
+  // ===== 2. TENTA CORRESPONDÊNCIA PARCIAL (COM PRIORIDADE POR PALAVRA-CHAVE) =====
+  // Ordem importa: palavras mais específicas primeiro
+  const palavrasChave: [string, string][] = [
+    ["area de servico", imgAreaServico],
+    ["area externa", imgAreaExterna],
+    ["sala de estar", imgSalaDeEstar],
+    ["sala", imgSalaDeEstar],
+    ["cozinha", imgCozinha],
+    ["quarto", imgQuarto],
+    ["dormitorio", imgQuarto],
+    ["banheiro", imgBanheiro],
+    ["lavabo", imgBanheiro],
+    ["corredor", imgCorredor],
+    ["hall", imgHall],
+    ["garagem", imgGaragem],
+    ["quintal", imgQuintal],
+    ["seguranca", imgSeguranca],
+    ["chaves", imgChaves],
+    ["medidores", imgMedidores],
+    ["instalacoes", imgInstalacoes],
+  ];
+
+  for (const [chave, url] of palavrasChave) {
+    if (nome.includes(chave)) return url;
   }
-  
-  // Se não encontrar, retorna a genérica
+
+  // ===== 3. SE NÃO ENCONTROU, USA GENÉRICA =====
   return IMAGEM_GENERICA;
 }
 
@@ -209,51 +260,65 @@ const fotoCapa = fotosAmbiente[0]?.src || getImagemPadrao(ambiente.nome);
       className="rounded-2xl overflow-hidden transition-all duration-200"
       style={{ background: "#252A34", border: "1px solid #2E3440" }}
     >
-      <div 
-        className="flex items-center gap-3 p-3 cursor-pointer select-none"
-        onClick={() => setOpen((v) => !v)}
+{/* Header do Card */}
+<div 
+  className="flex items-center gap-3 p-3 cursor-pointer select-none"
+  onClick={() => setOpen((v) => !v)}
+>
+  {/* Thumbnail da foto com número em cima */}
+  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-800">
+    <img 
+      src={fotoCapa} 
+      alt={ambiente.nome} 
+      className="w-full h-full object-cover"
+    />
+    {/* Número do ambiente como ícone em cima da imagem */}
+    <div 
+      className="absolute top-1 left-1 flex items-center justify-center rounded-full font-bold text-white"
+      style={{
+        width: 22,
+        height: 22,
+        background: "var(--accent, #e11d48)",
+        fontSize: 11,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+      }}
+    >
+      {String(numero).padStart(2, "0")}
+    </div>
+  </div>
+
+  {/* Nome do ambiente (sem "Ambiente X") */}
+  <div className="flex-1 min-w-0">
+    <h3 className="text-white font-medium text-sm truncate">
+      {ambiente.nome}
+    </h3>
+  </div>
+
+  {/* Lado Direito: quantidade de itens, avarias e ações */}
+  <div className="flex items-center gap-3 shrink-0">
+    {avariasAmb > 0 && (
+      <span className="badge badge-bad px-2 py-0.5 text-xs rounded-full">
+        {avariasAmb} avaria(s)
+      </span>
+    )}
+
+    {/* Quantidade de itens no final */}
+    <span className="text-gray-300 text-xs">
+      {ambiente.itens.length} {ambiente.itens.length === 1 ? "item" : "itens"}
+    </span>
+
+    {!locked && (
+      <button 
+        onClick={(e) => { e.stopPropagation(); onRemove(); }} 
+        className="p-1.5 text-gray-400 hover:text-red-400 rounded-full transition-colors"
       >
-        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-800">
-          <img 
-            src={fotoCapa} 
-            alt={ambiente.nome} 
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <Trash2 size={15} />
+      </button>
+    )}
 
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white font-medium text-sm truncate">
-            Ambiente {numero} {ambiente.nome}
-          </h3>
-          <p className="text-gray-400 text-xs mt-0.5">
-            {ambiente.itens.length} {ambiente.itens.length === 1 ? "item" : "itens"}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          {avariasAmb > 0 && (
-            <span className="badge badge-bad px-2 py-0.5 text-xs rounded-full">
-              {avariasAmb} avaria(s)
-            </span>
-          )}
-
-          <span className="text-white font-semibold text-sm px-1">
-            {ambiente.itens.length}
-          </span>
-
-          {!locked && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); onRemove(); }} 
-              className="p-1.5 text-gray-400 hover:text-red-400 rounded-full transition-colors"
-            >
-              <Trash2 size={15} />
-            </button>
-          )}
-
-          {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
-        </div>
-      </div>
-
+    {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+  </div>
+</div>
       {open && (
         <div className="p-4 border-t border-[#2E3440]" style={{ background: "#1E222B" }}>
           <div className="mb-4 p-3 rounded-xl border border-dashed border-gray-700">
