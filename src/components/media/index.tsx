@@ -32,25 +32,25 @@ export function MediaPicker({ onAdd, multiple = true, small = false }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2 flex-wrap">
-        <button type="button" onClick={() => cameraRef.current?.click()} className={btnClass} style={size}>
-          <Camera size={small ? 16 : 14} />{label("Tirar foto")}
-        </button>
-        <button type="button" onClick={() => galleryRef.current?.click()} className={btnClass} style={size}>
-          <Upload size={small ? 16 : 14} />{label("Enviar imagem")}
-        </button>
-        <button
-          type="button"
-          onClick={() => { setRecError(""); setRecordingVideo(true); }}
-          className={btnClass}
-          style={size}
-        >
-          <Video size={small ? 16 : 14} />{label("Gravar vídeo")}
-        </button>
-        <button type="button" onClick={() => videoRef.current?.click()} className={btnClass} style={size}>
-          <Upload size={small ? 16 : 14} />{label("Enviar vídeo")}
-        </button>
-      </div>
+<div className="flex items-center gap-1.5" style={{ flexWrap: "nowrap" }}>
+  <button type="button" onClick={() => cameraRef.current?.click()} className={btnClass} style={size}>
+    <Camera size={small ? 16 : 14} />{label("Foto")}
+  </button>
+  <button type="button" onClick={() => galleryRef.current?.click()} className={btnClass} style={size}>
+    <Upload size={small ? 16 : 14} />{label("Imagem")}
+  </button>
+  <button
+    type="button"
+    onClick={() => { setRecError(""); setRecordingVideo(true); }}
+    className={btnClass}
+    style={size}
+  >
+    <Video size={small ? 16 : 14} />{label("Gravar")}
+  </button>
+  <button type="button" onClick={() => videoRef.current?.click()} className={btnClass} style={size}>
+    <Upload size={small ? 16 : 14} />{label("Vídeo")}
+  </button>
+</div>
       {recError && <p className="text-xs" style={{ color: "var(--bad)" }}>{recError}</p>}
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" multiple={multiple} className="hidden" onChange={handlePick} />
       <input ref={galleryRef} type="file" accept="image/*" multiple={multiple} className="hidden" onChange={handlePick} />

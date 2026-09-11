@@ -6,6 +6,7 @@ import { QuantityStepper } from "../../components/TechField";
 import { PhotoPicker, PhotoThumb } from "../../components/media";
 import { CHAVE_TIPOS, emptyChave, uid } from "../../data/inspectionModel";
 import { filesToPhotos } from "../../utils/media";
+import { useState } from "react";
 
 export function ChaveRow({ label, data, locked, onChange, onRemove }) {
   const fotos = data.fotos || [];
@@ -55,11 +56,18 @@ export function ChaveRow({ label, data, locked, onChange, onRemove }) {
 
 
 export function ChavesTab({ chaves, locked, onChange }) {
-  function addOutra() {
-    const nome = prompt("Nome da chave/item:");
-    if (!nome || !nome.trim()) return;
-    onChange((c) => ({ ...c, outras: [...c.outras, { id: uid(), nome: nome.trim(), ...emptyChave() }] }));
-  }
+ const [novaChaveNome, setNovaChaveNome] = useState("");
+const [mostrarInputNovaChave, setMostrarInputNovaChave] = useState(false);
+
+function addOutra() {
+  if (!novaChaveNome.trim()) return;
+  onChange((c) => ({
+    ...c,
+    outras: [...c.outras, { id: uid(), nome: novaChaveNome.trim(), ...emptyChave() }],
+  }));
+  setNovaChaveNome("");
+  setMostrarInputNovaChave(false);
+}
 
   function updateOutra(id, fn) {
     onChange((c) => ({ ...c, outras: c.outras.map((o) => (o.id === id ? fn(o) : o)) }));
@@ -92,11 +100,46 @@ export function ChavesTab({ chaves, locked, onChange }) {
         />
       ))}
 
-      {!locked && (
-        <button onClick={addOutra} className="btn-ghost rounded-full px-4 py-2.5 text-sm flex items-center gap-2 w-fit">
-          <Plus size={14} /> Outras chaves
-        </button>
-      )}
+      {!locked && !mostrarInputNovaChave && (
+  <button
+    onClick={() => setMostrarInputNovaChave(true)}
+    className="btn-ghost rounded-full px-4 py-2.5 text-sm flex items-center gap-2 w-fit"
+  >
+    <Plus size={14} /> Outras chaves
+  </button>
+)}
+
+{!locked && mostrarInputNovaChave && (
+  <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "var(--card-alt)", border: "1px solid var(--line)" }}>
+    <input
+      autoFocus
+      type="text"
+      placeholder="Nome da chave/item..."
+      value={novaChaveNome}
+      onChange={(e) => setNovaChaveNome(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") addOutra();
+        if (e.key === "Escape") {
+          setNovaChaveNome("");
+          setMostrarInputNovaChave(false);
+        }
+      }}
+      className="input flex-1 px-3 py-2 text-sm"
+    />
+    <button onClick={addOutra} className="btn-primary rounded-full px-4 py-2 text-sm">
+      Adicionar
+    </button>
+    <button
+      onClick={() => {
+        setNovaChaveNome("");
+        setMostrarInputNovaChave(false);
+      }}
+      className="btn-ghost rounded-full px-3 py-2 text-sm"
+    >
+      Cancelar
+    </button>
+  </div>
+)}
     </div>
   );
 }

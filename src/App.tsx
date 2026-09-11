@@ -12,7 +12,7 @@ import { todayISO } from "./utils/format";
 import { DetailView } from "./views/DetailView";
 import { ListView } from "./views/ListView";
 import { ModelBuilderView } from "./views/ModelosTab";
-import { NewInspectionView } from "./views/NewInspectionView";
+import { NewInspectionWizard } from "./views/NewInspectionWizard";
 import type { Agendamento, CustomModel, Inspection } from "./types/inspection";
 import { TesteCalendario } from "./TesteCalendario";
 
@@ -535,16 +535,16 @@ export default function App() {
       )}
 
       {view === "new" && (
-        <div key="new" className="view-enter">
-        <NewInspectionView
-          onCancel={() => setView("list")}
-          onCreate={createInspection}
-          initialModel={pendingModel}
-          initialDate={pendingPrefill?.date}
-          initialEndereco={pendingPrefill?.endereco}
-        />
-        </div>
-      )}
+  <div key="new" className="view-enter">
+    <NewInspectionWizard
+      onCancel={() => setView("list")}
+      onCreate={createInspection}
+      initialModel={pendingModel}
+      initialDate={pendingPrefill?.date}
+      initialEndereco={pendingPrefill?.endereco}
+    />
+  </div>
+)}
 
       {view === "buildModel" && (
         <div key="buildModel" className="view-enter">

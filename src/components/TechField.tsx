@@ -111,7 +111,17 @@ export function TechFieldPicker({ fieldKey, label, value, options, disabled, onC
           className="flex items-center gap-2 text-left min-w-0"
         >
           {!disabled && <ChevronDown size={13} className={expanded ? "rotate-180" : ""} style={{ color: "var(--accent)", flexShrink: 0 }} />}
-          <span className="text-xs font-bold uppercase tracking-wide truncate" style={{ color: "var(--field-label)" }}>Detalhes {label}</span>
+<span 
+  className="text-xs font-bold uppercase tracking-wide" 
+  style={{ 
+    color: "var(--field-label)",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    lineHeight: "1.3",
+  }}
+>
+  Detalhes {label}
+</span>
         </button>
         <div className="flex items-center gap-1.5 shrink-0">
           {!disabled && allOptions.length > 0 && (

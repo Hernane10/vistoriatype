@@ -2,7 +2,8 @@
 // only the file boundaries moved, so behavior should be identical.
 
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Download, FileText, Gauge, GitCompare, KeyRound, Layers, Lock, PenLine, Printer, QrCode, Unlock } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, FileText, Gauge, GitCompare, 
+  KeyRound, Layers, Lock, PenLine, Printer, QrCode, Unlock, Check } from "lucide-react";
 import { CapaFotoEditor } from "../../components/CapaFotoEditor";
 import { QrCodeModal } from "../../components/QrCodeModal";
 import { ambientesFromModel, makeAmbiente } from "../../data/inspectionModel";
@@ -95,29 +96,52 @@ export function DetailView({ inspection, onBack, onUpdate, customModels = [], al
           {locked && <span className="badge badge-good flex items-center gap-1"><CheckCircle2 size={11} /> Finalizada</span>}
         </div>
 
-        <div className="flex items-center gap-2 mb-6 no-print flex-wrap">
-          <button onClick={() => setTab("ambientes")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "ambientes" ? "active" : ""}`}>
-            <Layers size={14} /> Ambientes
-          </button>
-          <button onClick={() => setTab("medidores")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "medidores" ? "active" : ""}`}>
-            <Gauge size={14} /> Medidores
-          </button>
-          <button onClick={() => setTab("chaves")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "chaves" ? "active" : ""}`}>
-            <KeyRound size={14} /> Chaves
-          </button>
-          <button onClick={() => setTab("comparar")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "comparar" ? "active" : ""}`}>
-            <GitCompare size={14} /> Comparar
-          </button>
-          <button onClick={() => setTab("parecer")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "parecer" ? "active" : ""}`}>
-            <FileText size={14} /> Parecer Técnico
-          </button>
-          <button onClick={() => setTab("assinatura")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "assinatura" ? "active" : ""}`}>
-            <PenLine size={14} /> Assinatura Digital
-          </button>
-          <button onClick={() => setTab("pdf")} className={`tab-btn px-4 py-2 text-sm flex items-center gap-1.5 ${tab === "pdf" ? "active" : ""}`}>
-            <Printer size={14} /> PDF
-          </button>
-        </div>
+{/* INDICADOR DE ETAPAS */}
+<div className="max-w-4xl mx-auto mb-6 no-print">
+  <div className="flex items-center gap-1 overflow-x-auto pb-2">
+    {[
+      { id: "ambientes",   label: "Ambientes",    icon: Layers,    feito: inspection.ambientes?.length > 0 },
+      { id: "medidores",   label: "Medidores",    icon: Gauge,     feito: inspection.medidores?.agua?.ativo || inspection.medidores?.energia?.ativo },
+      { id: "chaves",      label: "Chaves",       icon: KeyRound,  feito: Object.values(inspection.chaves || {}).some((c: any) => c?.quantidade > 0) },
+      { id: "comparar",    label: "Comparar",     icon: GitCompare, feito: false },
+      { id: "parecer",     label: "Parecer",      icon: FileText,  feito: inspection.parecerTecnico?.texto?.length > 0 },
+      { id: "assinatura",  label: "Assinatura",   icon: PenLine,   feito: Object.values(inspection.signatures || {}).some((s: any) => s) },
+      { id: "pdf",         label: "PDF",          icon: Printer,   feito: false },
+    ].map((et) => {
+      const Icone = et.icon;
+      const ativo = tab === et.id;
+      return (
+        <button
+          key={et.id}
+          onClick={() => setTab(et.id)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap shrink-0 transition-all border ${
+            ativo ? "font-semibold" : ""
+          }`}
+          style={{
+            background: ativo
+              ? "#facc15"
+              : et.feito
+              ? "rgba(34,197,94,0.2)"
+              : "var(--card-alt)",
+            color: ativo
+              ? "#000"
+              : et.feito
+              ? "#15803d"
+              : "var(--ink-soft)",
+            borderColor: ativo
+              ? "#facc15"
+              : et.feito
+              ? "#22c55e"
+              : "var(--line)",
+          }}
+        >
+          {et.feito ? <Check size={12} /> : <Icone size={12} />}
+          {et.label}
+        </button>
+      );
+    })}
+  </div>
+</div>
 
         {tab === "ambientes" && (
           <AmbientesTab
