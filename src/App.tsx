@@ -33,6 +33,7 @@ export default function App() {
   const [pendingPrefill, setPendingPrefill] = useState<{ date?: string; endereco?: string } | null>(null);
   const [customModels, setCustomModels] = useState<CustomModel[]>([]);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxMarcas, setLightboxMarcas] = useState<any>(null);
   const [loaded, setLoaded] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -494,8 +495,20 @@ export default function App() {
         }
       `}</style>
 
-      <LightboxContext.Provider value={setLightboxSrc}>
-      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+   <LightboxContext.Provider
+  value={(src: string, marcas?: any) => {
+    setLightboxSrc(src);
+    setLightboxMarcas(marcas || null);
+  }}
+>
+  <Lightbox
+    src={lightboxSrc}
+    marcas={lightboxMarcas}
+    onClose={() => {
+      setLightboxSrc(null);
+      setLightboxMarcas(null);
+    }}
+  />
 
       {!loaded && (
         <div className="flex items-center justify-center py-24">

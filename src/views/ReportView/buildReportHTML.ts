@@ -17,9 +17,12 @@ export function mediaHtml(foto) {
   const comentarioMarcacao = Array.isArray(marcas) ? "" : (marcas?.comentario || "");
   const marcasHtml = pontos.map((p, i) => `<div style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px #E23B3B;background:#E23B3B;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i + 1}</div>`).join("");
   const comentarioHtml = comentarioMarcacao ? `<p style="font-size:10.5px;color:#b23e2a;margin:4px 0 0;font-weight:600">⚠ ${escapeHtml(comentarioMarcacao)}</p>` : "";
-  return `<div class="media-card"><div style="position:relative;width:100%;height:120px"><img src="${foto.src}" class="zoomable-photo" loading="lazy" style="width:100%;height:120px;object-fit:cover;border-radius:8px 8px 0 0;cursor:zoom-in;display:block" />${marcasHtml}</div><div style="padding:6px 8px">${cap}${comentarioHtml}</div></div>`;
+  
+  // Usamos encodeURIComponent para garantir que caracteres especiais/aspas/quebras de linha não quebrem o HTML
+  const marcasJson = (pontos.length > 0 || comentarioMarcacao) ? ' data-marcas="' + encodeURIComponent(JSON.stringify(marcas)) + '"' : "";
+  
+  return `<div class="media-card"><div style="position:relative;width:100%;height:120px"><img src="${foto.src}" class="zoomable-photo"${marcasJson} loading="lazy" style="width:100%;height:120px;object-fit:cover;border-radius:8px 8px 0 0;cursor:zoom-in;display:block" />${marcasHtml}</div><div style="padding:6px 8px">${cap}${comentarioHtml}</div></div>`;
 }
-
 // Builds a fully standalone, self-contained HTML document (light theme, print-ready)
 // so the report can be opened in a real new browser tab — this avoids relying on
 // window.print() inside the sandboxed artifact iframe, which some browsers block.
@@ -192,9 +195,15 @@ const badgeStyle = getEstadoBadgeStyle(item.estado, item.semTeste);
 </head>
 <body>
   <div class="toolbar"><button onclick="window.print()">Imprimir / salvar como PDF</button></div>
-  <div id="photo-lightbox" onclick="this.classList.remove('open')">
-    <button onclick="event.stopPropagation();document.getElementById('photo-lightbox').classList.remove('open')">✕</button>
-    <img id="photo-lightbox-img" src="" alt="" />
+<div id="photo-lightbox" onclick="this.classList.remove('open')" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999999;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box">
+  <button onclick="event.stopPropagation();document.getElementById('photo-lightbox').classList.remove('open')" style="position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</button>
+  
+  <div id="photo-lightbox-inner" style="position:relative;display:inline-block;max-width:90vw;max-height:80vh;" onclick="event.stopPropagation()">
+    <img id="photo-lightbox-img" src="" alt="" style="max-width:90vw;max-height:80vh;object-fit:contain;border-radius:8px;display:block;" />
+  </div>
+  
+  <div id="photo-lightbox-comment" style="display:none;margin-top:14px;background:rgba(226,59,59,0.95);color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:600;max-width:85vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);z-index:10" onclick="event.stopPropagation()"></div>
+</div>
   </div>
   <div class="wrap">
     <div style="height:6px;background:linear-gradient(90deg,#A23A4C,#c96a7a);border-radius:999px;margin-bottom:20px"></div>
@@ -235,16 +244,72 @@ const badgeStyle = getEstadoBadgeStyle(item.estado, item.semTeste);
       ${sigHtml("Assinatura do locatário", inspection.signatures?.locatario)}
     </div>
   </div>
-  <script>
-    document.addEventListener('click', function (e) {
-      var img = e.target.closest('.zoomable-photo');
-      if (!img) return;
-      var lightbox = document.getElementById('photo-lightbox');
-      document.getElementById('photo-lightbox-img').src = img.src;
-      lightbox.classList.add('open');
-    });
-  </script>
-</body>
-</html>`;
-}
+<script>
+  document.addEventListener('click', function (e) {
+    var img = e.target.closest('.zoomable-photo');
+    if (!img) return;
+    
+    var lightbox = document.getElementById('photo-lightbox');
+    var lightboxImg = document.getElementById('photo-lightbox-img');
+    var lightboxInner = document.getElementById('photo-lightbox-inner');
+    var lightboxComment = document.getElementById('photo-lightbox-comment');
+    
+    lightboxImg.src = img.src;
+    
+    // Limpa marcações anteriores
+    lightboxInner.querySelectorAll('.lightbox-mark').forEach(function(el) { el.remove(); });
+    lightboxComment.style.display = 'none';
+    lightboxComment.textContent = '';
+    
+    // Lê e descompacta os dados de data-marcas
+    var marcasData = img.getAttribute('data-marcas');
+    if (marcasData) {
+      try {
+        var marcas = JSON.parse(decodeURIComponent(marcasData));
+        var pontos = Array.isArray(marcas) ? marcas : (marcas.points || []);
+        var comentario = Array.isArray(marcas) ? '' : (marcas.comentario || '');
+        
+        pontos.forEach(function(p, i) {
+          var mark = document.createElement('div');
+          mark.className = 'lightbox-mark';
+          mark.style.position = 'absolute';
+          mark.style.left = p.x + '%';
+          mark.style.top = p.y + '%';
+          mark.style.transform = 'translate(-50%,-50%)';
+          mark.style.width = '26px';
+          mark.style.height = '26px';
+          mark.style.borderRadius = '50%';
+          mark.style.border = '2px solid #ffffff';
+          mark.style.background = '#E23B3B';
+          mark.style.color = '#ffffff';
+          mark.style.fontSize = '12px';
+          mark.style.fontWeight = '700';
+          mark.style.display = 'flex';
+          mark.style.alignItems = 'center';
+          mark.style.justifyContent = 'center';
+          mark.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4)';
+          mark.style.zIndex = '5';
+          mark.textContent = (i + 1);
+          lightboxInner.appendChild(mark);
+        });
+        
+        if (comentario) {
+          lightboxComment.textContent = '⚠ ' + comentario;
+          lightboxComment.style.display = 'block';
+        }
+      } catch(err) {
+        console.error('Erro ao ler marcas no lightbox:', err);
+      }
+    }
+    
+    lightbox.style.display = 'flex';
+    lightbox.classList.add('open');
+  });
 
+  // Garante que o CSS oculte/exiba o lightbox corretamente sem quebrar o layout
+  var style = document.createElement('style');
+  style.innerHTML = '#photo-lightbox:not(.open) { display: none !important; }';
+  document.head.appendChild(style);
+</script>
+`;
+      }

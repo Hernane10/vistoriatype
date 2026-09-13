@@ -215,13 +215,28 @@ export function PhotoAnnotator({ src, marcas, onSave, onClose }) {
 
         <div className="mt-3">
           <label className="label block mb-1.5">Comentário / observação da marcação</label>
-          <textarea
-            className="textarea w-full px-4 py-2.5 text-sm"
-            rows={2}
-            placeholder="Descreva a avaria marcada..."
-            value={comentario}
-            onChange={(e) => setComentario(e.target.value)}
-          />
+<textarea
+  rows={2}
+  placeholder="Descreva a avaria marcada..."
+  value={comentario}
+  onChange={(e) => setComentario(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "10px 14px",
+    fontSize: 14,
+    background: "var(--card)",
+    color: "var(--ink-strong)",
+    border: "1.5px solid var(--line)",
+    borderRadius: 10,
+    resize: "vertical",
+    minHeight: 60,
+    cursor: "text",
+    pointerEvents: "auto",
+    position: "relative",
+    zIndex: 10,
+    fontFamily: "inherit",
+  }}
+/>
         </div>
 
         <div className="flex items-center justify-between gap-2 mt-3">
@@ -283,7 +298,7 @@ export function PhotoThumb({ foto, size = 60, onRemove, onUpdate }) {
         alt=""
         loading="lazy"
         className="w-full h-full object-cover cursor-zoom-in"
-        onClick={() => openLightbox(foto.src)}
+        onClick={() => openLightbox(foto.src, marcas)}
       />
       {pontos.map((p, i) => (
         <div

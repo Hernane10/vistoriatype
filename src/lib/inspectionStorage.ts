@@ -2,6 +2,7 @@
 // only the file boundaries moved, so behavior should be identical.
 
 import { storage } from "./storage";
+export const STORAGE_INDEX_KEY = "inspections-index";
 
 export const inspKey = (id) => `insp:${id}`;
 
@@ -26,9 +27,21 @@ export async function storageLoadAll() {
   }
 }
 
-
 export async function storageSaveInspection(insp) {
   await storage.set(inspKey(insp.id), JSON.stringify(insp));
+
+  // Atualiza o índice — garante que essa vistoria apareça na lista
+  try {
+    const idxRes = await storage.get(STORAGE_INDEX_KEY);
+    const ids = idxRes ? JSON.parse(idxRes.value) : [];
+    if (!ids.includes(insp.id)) {
+      ids.unshift(insp.id);
+      await storage.set(STORAGE_INDEX_KEY, JSON.stringify(ids));
+    }
+  } catch {
+    // Se falhar, tenta salvar só o índice
+    await storage.set(STORAGE_INDEX_KEY, JSON.stringify([insp.id]));
+  }
 }
 
 

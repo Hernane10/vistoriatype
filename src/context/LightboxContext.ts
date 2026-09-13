@@ -1,3 +1,5 @@
 import { createContext } from "react";
 
-export const LightboxContext = createContext<(src: string) => void>(() => {});
+export const LightboxContext = createContext<
+  (src: string, marcas?: any) => void
+>(() => {});

@@ -9,7 +9,8 @@ import { TEMPLATES, makeItem, makeAmbiente } from "../../data/inspectionModel";
 // ============================================
 export function AmbienteCard({ ambiente, numero, locked, onRemove, onChange }: any) {
   const [open, setOpen] = useState(false);
-
+  const [mostrarInputItem, setMostrarInputItem] = useState(false);
+  const [novoItemNome, setNovoItemNome] = useState("");
   const fotoCapa = useMemo(() => {
     const fotoCadastrada = ambiente.fotos?.[0]?.src;
     return fotoCadastrada || getImagemPadrao(ambiente.nome);
@@ -123,23 +124,73 @@ export function AmbienteCard({ ambiente, numero, locked, onRemove, onChange }: a
             ))}
           </div>
 
-          {!locked && (
-            <button
-              onClick={() => {
-                const nome = window.prompt("Nome do item:");
-                if (nome && nome.trim()) {
-                  onChange((a: any) => ({
-                    ...a,
-                    itens: [...(a.itens || []), makeItem(nome.trim())],
-                  }));
-                }
-              }}
-              className="btn-ghost rounded-full px-3 py-2 text-xs mt-3 flex items-center gap-1.5"
-              style={{ color: "var(--accent)" }}
-            >
-              <Plus size={13} /> Adicionar item
-            </button>
-          )}
+{!locked && !mostrarInputItem && (
+  <button
+    onClick={() => setMostrarInputItem(true)}
+    className="btn-ghost rounded-full px-3 py-2 text-xs mt-3 flex items-center gap-1.5"
+    style={{ color: "var(--accent)" }}
+  >
+    <Plus size={13} /> Adicionar item
+  </button>
+)}
+
+{!locked && mostrarInputItem && (
+  <div
+    className="flex items-center gap-2 mt-3 p-2 rounded-xl"
+    style={{ background: "var(--card)", border: "1px solid var(--line)" }}
+  >
+    <input
+      autoFocus
+      type="text"
+      placeholder="Nome do item (ex: Teto, Parede, Piso...)"
+      value={novoItemNome}
+      onChange={(e) => setNovoItemNome(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          const nome = novoItemNome.trim();
+          if (nome) {
+            onChange((a: any) => ({
+              ...a,
+              itens: [...(a.itens || []), makeItem(nome)],
+            }));
+            setNovoItemNome("");
+            setMostrarInputItem(false);
+          }
+        }
+        if (e.key === "Escape") {
+          setNovoItemNome("");
+          setMostrarInputItem(false);
+        }
+      }}
+      className="input flex-1 px-3 py-2 text-sm"
+    />
+    <button
+      onClick={() => {
+        const nome = novoItemNome.trim();
+        if (nome) {
+          onChange((a: any) => ({
+            ...a,
+            itens: [...(a.itens || []), makeItem(nome)],
+          }));
+          setNovoItemNome("");
+          setMostrarInputItem(false);
+        }
+      }}
+      className="btn-primary rounded-full px-4 py-2 text-xs"
+    >
+      Adicionar
+    </button>
+    <button
+      onClick={() => {
+        setNovoItemNome("");
+        setMostrarInputItem(false);
+      }}
+      className="btn-ghost rounded-full px-3 py-2 text-xs"
+    >
+      ✕
+    </button>
+  </div>
+)}
         </div>
       )}
     </div>
