@@ -1,48 +1,50 @@
-// Auto-extracted from the original single-file App.jsx — logic is unchanged,
-// only the file boundaries moved, so behavior should be identical.
-
 import { useContext, useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, Camera, Info, Printer, Share2, X } from "lucide-react";
+import {
+  AlertTriangle, ArrowLeft, Camera, Info, Printer, Share2, X, Link2, Loader2,
+} from "lucide-react";
 import { LightboxContext } from "../../context/LightboxContext";
 import { storage } from "../../lib/storage";
 import { SignaturePad } from "../../components/SignaturePad";
 import { CHAVE_TIPOS, ITEM_FIELD_DEFS } from "../../data/inspectionModel";
 import { enderecoCompleto, fmtDate, fmtDateTime } from "../../utils/format";
 import { fileToDataURL, maybeCompressImage } from "../../utils/media";
-import { buildReportHTML } from "./buildReportHTML";
+import { buildReportHTML, buildPrintHTML } from "./buildReportHTML";
+import { gerarLinkLaudo } from "../../lib/netlifyStorage";
 
-export function ReportView({ inspection, onUpdate, onClose, embedded = false }) {
-  const openLightbox = useContext(LightboxContext);
+export function ReportView({ inspection, onUpdate, onClose, embedded = false }: any) {
+  const openLightbox: any = useContext(LightboxContext);
   const [printHint, setPrintHint] = useState(false);
-  const [logo, setLogo] = useState(null);
+  const [logo, setLogo] = useState<string | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
-  const logoFileRef = useRef(null);
-  const totalItens = inspection.ambientes.reduce((a, amb) => a + amb.itens.length, 0);
-  const avarias = inspection.ambientes.reduce((a, amb) => a + amb.itens.filter((it) => it.temDano).length, 0);
+  const [gerandoLink, setGerandoLink] = useState(false);
+  const logoFileRef = useRef<HTMLInputElement>(null);
+
+  const totalItens = inspection.ambientes.reduce((a: number, amb: any) => a + amb.itens.length, 0);
+  const avarias = inspection.ambientes.reduce(
+    (a: number, amb: any) => a + amb.itens.filter((it: any) => it.temDano).length,
+    0
+  );
 
   useEffect(() => {
     (async () => {
       try {
         const r = await storage.get("app-logo");
         if (r) setLogo(r.value);
-      } catch {
-        // no logo saved yet
-      } finally {
+      } catch {}
+      finally {
         setLogoLoaded(true);
       }
     })();
   }, []);
 
-  async function handleLogoUpload(e) {
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const dataUrl = await fileToDataURL(await maybeCompressImage(file));
     setLogo(dataUrl);
     try {
       await storage.set("app-logo", dataUrl);
-    } catch {
-      // ignore save failure, logo still shown for this session
-    }
+    } catch {}
     e.target.value = "";
   }
 
@@ -50,67 +52,55 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
     setLogo(null);
     try {
       await storage.delete("app-logo");
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
-  function handlePrint() {
-    const html = buildReportHTML(inspection, logo);
-    try {
-      const blob = new Blob([html], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, "_blank");
-      if (!win) {
-        setPrintHint(true);
-      }
-    } catch {
-      setPrintHint(true);
-    }
+function handlePrint() {
+  const html = buildPrintHTML(inspection, logo);  // ← USA O SIMPLES
+  try {
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) setPrintHint(true);
+  } catch {
+    setPrintHint(true);
   }
-
-  function buildShareText() {
-    const totalItensLocal = inspection.ambientes.reduce((a, amb) => a + amb.itens.length, 0);
-    const avariasLocal = inspection.ambientes.reduce((a, amb) => a + amb.itens.filter((it) => it.temDano).length, 0);
-    return [
-      `📋 Laudo de Vistoria — VistorIA`,
-      `PEREIRA Gestão Imobiliária`,
-      ``,
-      `Tipo: ${inspection.tipo}`,
-      `Data: ${fmtDate(inspection.dataVistoria)}`,
-      `Vistoriador: ${inspection.vistoriador || "—"}`,
-      `Endereço: ${enderecoCompleto(inspection.imovel) || "—"}`,
-      `Status: ${inspection.status}`,
-      ``,
-      `Resumo: ${inspection.ambientes.length} ambientes, ${totalItensLocal} itens, ${avariasLocal} avarias`,
-      ``,
-      `Gere o PDF completo pelo botão "Imprimir / salvar PDF" no VistorIA e anexe aqui.`,
-    ].join("\n");
-  }
+}
 
   async function handleShare() {
-    const text = buildShareText();
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "Laudo de Vistoria — VistorIA", text });
+    try {
+      const html = buildReportHTML(inspection, logo);
+      const nomeArquivo = `laudo-${inspection.id}`;
+      const link = await gerarLinkLaudo(html, nomeArquivo);
+
+      if (!link) {
+        alert("Erro ao gerar link. Tente novamente.");
         return;
-      } catch {
-        // fell through to WhatsApp link below if share was cancelled/unsupported
       }
+
+      window.open(link, "_blank");
+      try {
+        await navigator.clipboard.writeText(link);
+        alert(`✅ Link gerado e copiado!\n\n${link}`);
+      } catch {
+        alert(`✅ Link gerado:\n\n${link}`);
+      }
+    } catch (err) {
+      console.error("Erro ao gerar link:", err);
+      alert("Erro ao gerar link. Verifique o console (F12).");
     }
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   const medidoresList = [
     { label: "Água", d: inspection.medidores.agua },
     { label: "Energia", d: inspection.medidores.energia },
     { label: "Gás", d: inspection.medidores.gas },
-  ].filter((m) => m.d.ativo);
+  ].filter((m: any) => m.d.ativo);
 
   const chavesList = [
-    ...CHAVE_TIPOS.map((t) => ({ label: t.label, ...inspection.chaves[t.key] })),
-    ...inspection.chaves.outras.map((o) => ({ label: o.nome, ...o })),
-  ].filter((c) => c.quantidade || c.observacoes);
+    ...CHAVE_TIPOS.map((t: any) => ({ label: t.label, ...inspection.chaves[t.key] })),
+    ...(inspection.chaves.outras || []).map((o: any) => ({ label: o.nome, ...o })),
+  ].filter((c: any) => c.quantidade || c.observacoes || (c.fotos || []).length);
 
   return (
     <div className={embedded ? "" : "min-h-full"}>
@@ -124,8 +114,27 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
           <h1 className="display text-base font-bold">Laudo de vistoria</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleShare} className="btn-secondary rounded-full px-4 py-2 text-sm flex items-center gap-2">
-            <Share2 size={15} /> Compartilhar
+          <button
+            onClick={async () => {
+              setGerandoLink(true);
+              try {
+                await handleShare();
+              } finally {
+                setGerandoLink(false);
+              }
+            }}
+            disabled={gerandoLink}
+            className="btn-secondary rounded-full px-4 py-2 text-sm flex items-center gap-2 disabled:opacity-50"
+          >
+            {gerandoLink ? (
+              <>
+                <Loader2 size={15} className="animate-spin" /> Gerando...
+              </>
+            ) : (
+              <>
+                <Link2 size={15} /> Gerar link
+              </>
+            )}
           </button>
           <button onClick={handlePrint} className="btn-primary rounded-full px-4 py-2 text-sm flex items-center gap-2">
             <Printer size={15} /> Imprimir / salvar PDF
@@ -137,10 +146,8 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
         <div className="rounded-xl px-4 py-3 text-xs flex items-start gap-2" style={{ background: "var(--card-alt)", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>
           <Info size={14} className="shrink-0 mt-0.5" />
           <span>
-            O botão abre o laudo pronto em uma nova aba, já formatado para leitura e impressão — use o botão
-            "Imprimir / salvar como PDF" dentro dessa aba. {printHint && (
-              <>Se a aba não abriu, seu navegador pode ter bloqueado o pop-up: permita pop-ups para este site e toque no botão novamente.</>
-            )}
+            <strong>Gerar link:</strong> cria um link permanente do laudo (hospedado na Netlify) para compartilhar com o inquilino. <br />
+            <strong>Imprimir / salvar PDF:</strong> abre o laudo em uma nova aba, pronto para impressão ou salvar como PDF.
           </span>
         </div>
       </div>
@@ -175,12 +182,20 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
               )}
               <input ref={logoFileRef} type="file" accept="image/*" className="hidden no-print" onChange={handleLogoUpload} />
               <div>
-                <h1 className="display text-2xl font-bold">Vistor<span style={{ color: "var(--accent)" }}>IA</span> — Laudo de Vistoria</h1>
-                <p className="text-sm mono mt-1" style={{ color: "var(--ink-soft)" }}>Vistoria de {inspection.tipo.toLowerCase()}</p>
+                <h1 className="display text-2xl font-bold">
+                  Vistor<span style={{ color: "var(--accent)" }}>IA</span> — Laudo de Vistoria
+                </h1>
+                <p className="text-sm mono mt-1" style={{ color: "var(--ink-soft)" }}>
+                  Vistoria de {inspection.tipo.toLowerCase()}
+                </p>
               </div>
             </div>
             {inspection.status === "Finalizada" && (
-              <div className="stamp px-4 py-2 text-xs">FINALIZADA<br />{fmtDate(inspection.dataVistoria)}</div>
+              <div className="stamp px-4 py-2 text-xs">
+                FINALIZADA
+                <br />
+                {fmtDate(inspection.dataVistoria)}
+              </div>
             )}
           </div>
 
@@ -192,10 +207,12 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
                 loading="lazy"
                 className="cursor-zoom-in"
                 style={{ width: "100%", maxHeight: 240, objectFit: "cover", borderRadius: 10, border: "1px solid var(--line)" }}
-                onClick={() => openLightbox(inspection.capaFoto.src)}
+                onClick={() => openLightbox(inspection.capaFoto.src, null)}
               />
               {inspection.capaFoto.date && (
-                <p className="text-[10px] mono mt-1" style={{ color: "var(--ink-soft)" }}>Foto registrada em {fmtDateTime(inspection.capaFoto.date)}</p>
+                <p className="text-[10px] mono mt-1" style={{ color: "var(--ink-soft)" }}>
+                  Foto registrada em {fmtDateTime(inspection.capaFoto.date)}
+                </p>
               )}
             </div>
           )}
@@ -210,22 +227,29 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
             {inspection.imovel.metragem && <div><span className="label block mb-0.5">Metragem</span>{inspection.imovel.metragem}</div>}
             <div><span className="label block mb-0.5">Proprietário</span>{inspection.imovel.proprietario || "—"}</div>
             <div><span className="label block mb-0.5">Inquilino</span>{inspection.imovel.inquilino || "—"}</div>
-            <div className="col-span-2"><span className="label block mb-0.5">Resumo</span>{inspection.ambientes.length} ambientes, {totalItens} itens, {avarias} avarias</div>
+            <div className="col-span-2">
+              <span className="label block mb-0.5">Resumo</span>
+              {inspection.ambientes.length} ambientes, {totalItens} itens, {avarias} avarias
+            </div>
           </div>
 
-          {inspection.ambientes.map((amb, ambIdx) => (
+          {inspection.ambientes.map((amb: any, ambIdx: number) => (
             <div key={amb.id} className="mb-6 print-ambiente">
               <h2 className="display text-base font-bold mb-2 pb-1 divider flex items-center gap-2">
-                <span className="mono font-bold flex items-center justify-center rounded-full" style={{ width: 20, height: 20, fontSize: 10, background: "var(--accent)", color: "#F3E4E7" }}>
+                <span
+                  className="mono font-bold flex items-center justify-center rounded-full"
+                  style={{ width: 20, height: 20, fontSize: 10, background: "var(--accent)", color: "#F3E4E7" }}
+                >
                   {String(ambIdx + 1).padStart(2, "0")}
                 </span>
                 {amb.nome}
               </h2>
+
               {(amb.fotos || []).length > 0 && (
                 <div className="mb-3">
                   <p className="label mb-1.5">Fotos/vídeos gerais do ambiente</p>
                   <div className="flex gap-2 flex-wrap">
-                    {amb.fotos.map((foto, fi) => (
+                    {amb.fotos.map((foto: any, fi: number) => (
                       <div key={fi} className="text-center">
                         <img
                           src={foto.src}
@@ -233,51 +257,58 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
                           loading="lazy"
                           className="rounded-md object-cover cursor-zoom-in"
                           style={{ width: 70, height: 70, border: "1px solid var(--line)" }}
-                          onClick={() => openLightbox(foto.src)}
+                          onClick={() => openLightbox(foto.src, foto.marcas)}
                         />
-                        {foto.date && <p className="text-[9px] mono mt-0.5" style={{ color: "var(--ink-soft)" }}>{fmtDateTime(foto.date)}</p>}
+                        {foto.date && (
+                          <p className="text-[9px] mono mt-0.5" style={{ color: "var(--ink-soft)" }}>
+                            {fmtDateTime(foto.date)}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
               <div className="grid gap-3">
-                {amb.itens.map((item) => {
-                  const camposPreenchidos = ITEM_FIELD_DEFS.filter((f) => (item.campos || {})[f.key]);
+                {amb.itens.map((item: any) => {
+                  const camposPreenchidos = ITEM_FIELD_DEFS.filter((f: any) => (item.campos || {})[f.key]);
                   return (
                     <div key={item.id} className="text-sm">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{item.nome}</span>
-                         <span className={`px-3 py-1 text-xs rounded-full font-semibold inline-block ${
-  item.semTeste ? "bg-gray-200 text-gray-700 border border-gray-300" :
-  item.estado === "Novo" ? "bg-black text-white" :
-  item.estado === "Ótimo" ? "bg-green-600 text-white" :
-  item.estado === "Bom" ? "bg-blue-600 text-white" :
-  item.estado === "Regular" ? "bg-yellow-500 text-black" :
-  item.estado === "Ruim" ? "bg-red-600 text-white" :
-  item.estado === "Péssimo" ? "bg-red-900 text-white" :
-  "bg-gray-400 text-white"
-}`}>
-  {item.semTeste ? "Sem teste" : item.estado}
-</span>
-{item.temDano && (
-  <span className="px-3 py-1 text-xs rounded-full font-semibold inline-flex items-center gap-1 bg-red-600 text-white">
-    <AlertTriangle size={10} /> Avaria
-  </span>
-)}
+                        <span className={`px-3 py-1 text-xs rounded-full font-semibold inline-block ${
+                          item.semTeste ? "bg-gray-200 text-gray-700 border border-gray-300" :
+                          item.estado === "Novo" ? "bg-black text-white" :
+                          item.estado === "Ótimo" ? "bg-green-600 text-white" :
+                          item.estado === "Bom" ? "bg-blue-600 text-white" :
+                          item.estado === "Regular" ? "bg-yellow-500 text-black" :
+                          item.estado === "Ruim" ? "bg-red-600 text-white" :
+                          item.estado === "Péssimo" ? "bg-red-900 text-white" :
+                          "bg-gray-400 text-white"
+                        }`}>
+                          {item.semTeste ? "Sem teste" : item.estado}
+                        </span>
+                        {item.temDano && (
+                          <span className="px-3 py-1 text-xs rounded-full font-semibold inline-flex items-center gap-1 bg-red-600 text-white">
+                            <AlertTriangle size={10} /> Avaria
+                          </span>
+                        )}
                       </div>
+
                       {camposPreenchidos.length > 0 && (
                         <p className="mt-1 text-xs" style={{ color: "var(--ink-soft)" }}>
-                          {camposPreenchidos.map((f) => `${f.label}: ${item.campos[f.key]}`).join(" · ")}
+                          {camposPreenchidos.map((f: any) => `${f.label}: ${item.campos[f.key]}`).join(" · ")}
                         </p>
                       )}
                       {item.observacoes && <p className="mt-1" style={{ color: "var(--ink-soft)" }}>{item.observacoes}</p>}
                       {item.temDano && item.descricaoDano && (
                         <p className="mt-1" style={{ color: "var(--bad)" }}>Avaria: {item.descricaoDano}</p>
                       )}
-                      {item.fotos.length > 0 && (
+
+                      {item.fotos && item.fotos.length > 0 && (
                         <div className="flex gap-2 mt-2 flex-wrap">
-                          {item.fotos.map((foto, i) => {
+                          {item.fotos.map((foto: any, i: number) => {
                             const marcasObj = foto.marcas || null;
                             const pontos = Array.isArray(marcasObj) ? marcasObj : (marcasObj?.points || []);
                             const comentarioMarcacao = Array.isArray(marcasObj) ? "" : (marcasObj?.comentario || "");
@@ -290,23 +321,43 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
                                     loading="lazy"
                                     className="rounded-md object-cover cursor-zoom-in"
                                     style={{ width: 70, height: 70, border: "1px solid var(--line)" }}
-                                    onClick={() => openLightbox(foto.src)}
+                                    onClick={() => openLightbox(foto.src, foto.marcas)}
                                   />
-                                  {pontos.map((p, mi) => (
+                                  {pontos.map((p: any, mi: number) => (
                                     <div
                                       key={mi}
                                       style={{
-                                        position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%,-50%)",
-                                        width: 13, height: 13, borderRadius: "50%", border: "2px solid #E23B3B", background: "rgba(226,59,59,0.3)",
-                                        color: "#fff", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
+                                        position: "absolute",
+                                        left: `${p.x}%`,
+                                        top: `${p.y}%`,
+                                        transform: "translate(-50%,-50%)",
+                                        width: 13,
+                                        height: 13,
+                                        borderRadius: "50%",
+                                        border: "2px solid #E23B3B",
+                                        background: "rgba(226,59,59,0.3)",
+                                        color: "#fff",
+                                        fontSize: 8,
+                                        fontWeight: 700,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                       }}
                                     >
                                       {mi + 1}
                                     </div>
                                   ))}
                                 </div>
-                                {foto.date && <p className="text-[9px] mono mt-0.5" style={{ color: "var(--ink-soft)" }}>{fmtDateTime(foto.date)}</p>}
-                                {comentarioMarcacao && <p className="text-[9px] mt-0.5" style={{ color: "var(--bad)" }}>{comentarioMarcacao}</p>}
+                                {foto.date && (
+                                  <p className="text-[9px] mono mt-0.5" style={{ color: "var(--ink-soft)" }}>
+                                    {fmtDateTime(foto.date)}
+                                  </p>
+                                )}
+                                {comentarioMarcacao && (
+                                  <p className="text-[9px] mt-0.5" style={{ color: "var(--bad)" }}>
+                                    {comentarioMarcacao}
+                                  </p>
+                                )}
                               </div>
                             );
                           })}
@@ -323,11 +374,15 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
             <div className="mb-6 print-block">
               <h2 className="display text-base font-bold mb-2 pb-1 divider">Medidores</h2>
               <div className="grid gap-2 text-sm">
-                {medidoresList.map((m) => (
+                {medidoresList.map((m: any) => (
                   <div key={m.label}>
                     <span className="font-medium">{m.label}</span>
                     <span style={{ color: "var(--ink-soft)" }}>
-                      {" — "}{m.d.numero ? `nº ${m.d.numero}` : ""}{m.d.leitura ? ` · leitura ${m.d.leitura}${m.d.unidade ? " " + m.d.unidade : ""}` : ""}{m.d.concessionaria ? ` · ${m.d.concessionaria}` : ""}{m.d.observacoes ? ` · ${m.d.observacoes}` : ""}
+                      {" — "}
+                      {m.d.numero ? `nº ${m.d.numero}` : ""}
+                      {m.d.leitura ? ` · leitura ${m.d.leitura}${m.d.unidade ? " " + m.d.unidade : ""}` : ""}
+                      {m.d.concessionaria ? ` · ${m.d.concessionaria}` : ""}
+                      {m.d.observacoes ? ` · ${m.d.observacoes}` : ""}
                     </span>
                   </div>
                 ))}
@@ -339,11 +394,12 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
             <div className="mb-6 print-block">
               <h2 className="display text-base font-bold mb-2 pb-1 divider">Chaves</h2>
               <div className="grid gap-1 text-sm">
-                {chavesList.map((c, i) => (
+                {chavesList.map((c: any, i: number) => (
                   <div key={i}>
                     <span className="font-medium">{c.label}</span>
                     <span style={{ color: "var(--ink-soft)" }}>
-                      {c.quantidade ? ` — qtd. ${c.quantidade}` : ""}{c.observacoes ? ` · ${c.observacoes}` : ""}
+                      {c.quantidade ? ` — qtd. ${c.quantidade}` : ""}
+                      {c.observacoes ? ` · ${c.observacoes}` : ""}
                     </span>
                   </div>
                 ))}
@@ -356,19 +412,25 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }) 
               label="Assinatura do vistoriador"
               value={inspection.signatures?.vistoriador}
               locked={inspection.status === "Finalizada"}
-              onSave={(dataUrl) => onUpdate((insp) => ({ ...insp, signatures: { ...insp.signatures, vistoriador: dataUrl } }))}
+              onSave={(dataUrl: string) =>
+                onUpdate((insp: any) => ({ ...insp, signatures: { ...insp.signatures, vistoriador: dataUrl } }))
+              }
             />
             <SignaturePad
               label="Assinatura do locador"
               value={inspection.signatures?.locador}
               locked={inspection.status === "Finalizada"}
-              onSave={(dataUrl) => onUpdate((insp) => ({ ...insp, signatures: { ...insp.signatures, locador: dataUrl } }))}
+              onSave={(dataUrl: string) =>
+                onUpdate((insp: any) => ({ ...insp, signatures: { ...insp.signatures, locador: dataUrl } }))
+              }
             />
             <SignaturePad
               label="Assinatura do locatário"
               value={inspection.signatures?.locatario}
               locked={inspection.status === "Finalizada"}
-              onSave={(dataUrl) => onUpdate((insp) => ({ ...insp, signatures: { ...insp.signatures, locatario: dataUrl } }))}
+              onSave={(dataUrl: string) =>
+                onUpdate((insp: any) => ({ ...insp, signatures: { ...insp.signatures, locatario: dataUrl } }))
+              }
             />
           </div>
         </div>
