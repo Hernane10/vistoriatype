@@ -144,18 +144,17 @@ export function DetailView({ inspection, onBack, onUpdate, customModels = [], al
 </div>
 
         {tab === "ambientes" && (
-          <AmbientesTab
-            inspection={inspection}
-            locked={locked}
-            templateOpen={templateOpen}
-            setTemplateOpen={setTemplateOpen}
-            addAmbiente={addAmbiente}
-            removeAmbiente={removeAmbiente}
-            updateAmbiente={updateAmbiente}
-            applyModel={applyModel}
-            customModels={customModels}
-          />
-        )}
+<AmbientesTab
+  inspection={inspection}
+  locked={locked}
+  onAddAmbiente={(novo) => onUpdate((insp: any) => ({ ...insp, ambientes: [...insp.ambientes, novo] }))}
+  onRemoveAmbiente={(id) => onUpdate((insp: any) => ({ ...insp, ambientes: insp.ambientes.filter((a: any) => a.id !== id) }))}
+  onUpdateAmbiente={(id, fn) => onUpdate((insp: any) => ({
+    ...insp,
+    ambientes: insp.ambientes.map((a: any) => a.id === id ? fn(a) : a),
+  }))}
+/>
+)}
 
         {tab === "medidores" && (
           <MedidoresTab

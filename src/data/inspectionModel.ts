@@ -50,17 +50,13 @@ export const CHAVE_TIPOS: { key: string; label: string }[] = [
   { key: 'tags', label: 'Tags' },
 ];
 
-export const ITEM_FIELD_DEFS: { key: string; label: string; type?: string }[] = [
-  { key: 'alvenaria', label: 'Alvenaria' },
-  { key: 'revestimento', label: 'Revestimento' },
-  { key: 'material', label: 'Material' },
-  { key: 'acabamento', label: 'Acabamento' },
-  { key: 'pintura', label: 'Pintura' },
-  { key: 'sanca', label: 'Sanca' },
-  { key: 'funcionamento', label: 'Funcionamento' },
-  { key: 'marca', label: 'Marca' },
-  { key: 'cor', label: 'Cor' },
-  { key: 'quantidade', label: 'Quantidade', type: 'number' },
+export const ITEM_FIELD_DEFS = [
+  { key: "corTom", label: "Cor e tom" },
+  { key: "material", label: "Material" },
+  { key: "pintura", label: "Pintura" },
+  { key: "sancaMolduras", label: "Sanca e molduras" },
+  { key: "iluminacao", label: "Iluminação" },
+  { key: "acabamento", label: "Acabamento" },
 ];
 
 export const FIELD_OPTIONS: Record<string, string[]> = {

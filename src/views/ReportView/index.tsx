@@ -56,12 +56,21 @@ export function ReportView({ inspection, onUpdate, onClose, embedded = false }: 
   }
 
 function handlePrint() {
-  const html = buildPrintHTML(inspection, logo);  // ← USA O SIMPLES
+  const html = buildPrintHTML(inspection, logo);
   try {
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, "_blank");
-    if (!win) setPrintHint(true);
+    if (!win) {
+      setPrintHint(true);
+      return;
+    }
+    // Aguarda a página carregar e chama o print automaticamente
+    win.onload = () => {
+      setTimeout(() => {
+        win.print();
+      }, 500);
+    };
   } catch {
     setPrintHint(true);
   }

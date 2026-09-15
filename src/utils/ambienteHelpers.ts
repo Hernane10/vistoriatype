@@ -16,7 +16,19 @@ import imgSeguranca from "../assets/ambientes/seguranca.jpg";
 export const ITENS_POR_AMBIENTE: Record<string, string[]> = {
   "sala": ["Teto", "Parede", "Piso", "Rodapé", "Porta", "Janela", "Tomadas", "Interruptores", "Iluminação"],
   "sala de estar": ["Teto", "Parede", "Piso", "Rodapé", "Porta", "Janela", "Tomadas", "Interruptores", "Iluminação"],
-  "cozinha": ["Teto", "Parede", "Piso", "Bancada", "Armário", "Pia", "Torneira", "Tomadas", "Iluminação"],
+  "cozinha": [
+    "Teto",
+    "Piso",
+    "Parede",
+    "Pia",
+    "Interruptor",
+    "Tomadas",
+    "Janelas",
+    "Porta",
+    "Fechaduras e trincos",
+    "Luminaria",
+    "Rodape"
+  ],
   "quarto": ["Teto", "Parede", "Piso", "Rodapé", "Porta", "Janela", "Tomadas", "Interruptores", "Iluminação", "Armário"],
   "banheiro": ["Teto", "Parede", "Piso", "Box", "Vaso", "Pia", "Torneira", "Chuveiro", "Espelho", "Tomadas"],
   "lavabo": ["Teto", "Parede", "Piso", "Vaso", "Pia", "Torneira", "Espelho"],
@@ -32,8 +44,9 @@ export const ITENS_POR_AMBIENTE: Record<string, string[]> = {
   "instalacoes": ["Elétrica", "Hidráulica", "Gás", "Internet"],
 };
 
-export function getItensPadrao(nomeAmbiente: string): string[] {
+export function getItensPadrao(nomeAmbiente: string, mobiliario?: string): string[] {
   if (!nomeAmbiente) return ["Teto", "Parede", "Piso"];
+  
   const nome = nomeAmbiente
     .toLowerCase()
     .trim()
@@ -41,11 +54,32 @@ export function getItensPadrao(nomeAmbiente: string): string[] {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ");
 
-  if (ITENS_POR_AMBIENTE[nome]) return ITENS_POR_AMBIENTE[nome];
-  for (const [chave, itens] of Object.entries(ITENS_POR_AMBIENTE)) {
-    if (nome.includes(chave) || chave.includes(nome)) return itens;
+  let itens: string[] = [];
+
+  if (ITENS_POR_AMBIENTE[nome]) {
+    itens = [...ITENS_POR_AMBIENTE[nome]];
+  } else {
+    for (const [chave, list] of Object.entries(ITENS_POR_AMBIENTE)) {
+      if (nome.includes(chave) || chave.includes(nome)) {
+        itens = [...list];
+        break;
+      }
+    }
   }
-  return ["Teto", "Parede", "Piso"];
+
+  if (itens.length === 0) {
+    itens = ["Teto", "Parede", "Piso"];
+  }
+
+  // Se for Cozinha e o imóvel for semi-mobiliado ou mobiliado, inclui os eletrodomésticos
+  if (nome.includes("cozinha")) {
+    const mob = (mobiliario || "").toLowerCase();
+    if (mob.includes("semi") || mob.includes("mobiliad")) {
+      itens.push("Geladeira", "Microondas", "Forno eletrico");
+    }
+  }
+
+  return itens;
 }
 
 const MAPA_IMAGENS_EXATO: Record<string, string> = {
@@ -85,7 +119,6 @@ export function getImagemPadrao(nomeAmbiente: string): string {
     return MAPA_IMAGENS_EXATO[nome];
   }
 
-  // Busca parcial caso não encontre correspondência exata
   for (const [chave, img] of Object.entries(MAPA_IMAGENS_EXATO)) {
     if (nome.includes(chave) || chave.includes(nome)) {
       return img;
