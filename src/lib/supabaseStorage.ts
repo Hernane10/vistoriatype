@@ -7,6 +7,9 @@ export async function gerarLinkLaudo(
   htmlContent: string,
   nomeArquivo: string
 ): Promise<string | null> {
+  // Sem credenciais o app roda 100% offline — a nuvem simplesmente não existe.
+  if (!supabase) return null;
+
   // 1. Converte o HTML em arquivo (Blob)
   const arquivo = new Blob([htmlContent], { type: "text/html" });
 

@@ -15,7 +15,7 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Trash2, Plus, ClipboardCheck, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseEnabled } from '../lib/supabase';
 
 interface EventItem {
   id: string;
@@ -32,6 +32,10 @@ export const CalendarSimples: React.FC = () => {
 
   // Busca os eventos do mês atual
   const fetchEvents = async () => {
+    // Sem Supabase configurado o calendário segue funcionando, só sem os
+    // agendamentos da nuvem (ver src/lib/supabase.ts).
+    if (!supabase) return;
+
     const start = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
     const end = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
 
@@ -68,6 +72,7 @@ export const CalendarSimples: React.FC = () => {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventTitle.trim() || !selectedDate) return;
+    if (!supabase) return;
 
     setLoading(true);
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -89,6 +94,8 @@ export const CalendarSimples: React.FC = () => {
 
   // Exclui um evento
   const handleDeleteEvent = async (id: string) => {
+    if (!supabase) return;
+
     const { error } = await supabase
       .from('events')
       .delete()
@@ -253,12 +260,18 @@ export const CalendarSimples: React.FC = () => {
             />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !supabaseEnabled}
               className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-lg transition-colors disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               {loading ? 'Salvando...' : 'Salvar Vistoria'}
             </button>
+            {!supabaseEnabled && (
+              <p className="text-xs text-slate-500">
+                Agendamentos na nuvem desativados — o app funciona offline normalmente. Configure
+                VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para salvá-los (veja .env.example).
+              </p>
+            )}
           </form>
         </div>
       )}

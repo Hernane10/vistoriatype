@@ -1,0 +1,61 @@
+# Base44 sandbox environment for VistorIA.
+#
+# VistorIA is a single Vite + React + TS app: the whole product runs in the
+# browser (IndexedDB) with Supabase as *optional* cloud sync. There is no API
+# server, no database to run locally, and no secret required to boot, so this
+# compose file only has to run the Vite dev server from the cloned source.
+#
+# Run:  docker compose -f docker-compose.base44.yml up -d --build
+# Preview: http://localhost:3000  (inside the container the dev server is on 5173)
+
+services:
+  web:
+    # Plain runtime image, source bind-mounted below: edits appear via HMR,
+    # never from a prebuilt application image.
+    image: node:22
+    working_dir: /app
+    # Dependencies live in a Docker volume (not the repo checkout) and are
+    # installed from the committed lockfile on every container start, after the
+    # mounts exist — then the dev server replaces this shell process.
+    command:
+      - sh
+      - -ec
+      - CI=true npm ci --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 5173
+    ports:
+      - "3000:5173"
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+    environment:
+      # Preview plumbing. All bare (values come from the sandbox environment);
+      # BASE44_PREVIEW_MODE gates the sandbox-only vite config in vite.config.ts.
+      - BASE44_PREVIEW_MODE
+      - BASE44_SANDBOX_HOST_DOMAIN
+      - BASE44_PUBLIC_HOST_SUFFIX
+      # Honored by Vite >= 6.1; harmless on this project's Vite 5 (see
+      # vite.config.ts, which handles the host allowlist explicitly).
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+    env_file:
+      # Platform-managed secrets (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY /
+      # VITE_NETLIFY_TOKEN). Optional: without them the app runs 100% offline
+      # and the cloud button stays disabled. Last entry, so dashboard values
+      # always win over anything else. `required: false` keeps `up` working on a
+      # checkout where the file has not been created yet.
+      - path: /run/base44/app.env
+        required: false
+    # Probes real Vite responsiveness (fetch is built into node:22 — no curl
+    # dependency). The long start_period covers the one-time `npm ci`.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 120s
+    restart: on-failure
+
+volumes:
+  web_node_modules:

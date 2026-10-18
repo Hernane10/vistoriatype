@@ -1,0 +1,22 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "VITE_SUPABASE_URL",
+      "description": "Supabase project URL (Settings → API) for the optional cloud sync of vistorias. The app runs fully offline without it.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "VITE_SUPABASE_ANON_KEY",
+      "description": "Supabase anon/publishable key (Settings → API) for the optional cloud sync. Safe in the browser bundle; RLS enforces access.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "VITE_NETLIFY_TOKEN",
+      "description": "Netlify personal access token, used to publish a report (laudo) as a public link from the app. Optional.",
+      "requiredAtBoot": false
+    }
+  ]
+}
